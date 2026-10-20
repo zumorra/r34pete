@@ -114,8 +114,8 @@ class GestorFeeds {
     this.contador = 0;
   }
 
-  cargarDesdeConfig(cfg) {
-    for (const datos of cfg.feeds || []) {
+  cargarDesdeConfig(lista) {
+    for (const datos of lista || []) {
       const id = String(datos.id || `f${++this.contador}`);
       const feed = new Feed(id, datos, this.cliente);
       this.feeds.set(id, feed);

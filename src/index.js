@@ -22,7 +22,7 @@ const {
   ChannelType,
 } = require("discord.js");
 
-const { cargar, rutaPorDefecto } = require("./config");
+const { cargar } = require("./config");
 const proveedores = require("./providers");
 const { GestorFeeds } = require("./feed");
 const guard = require("./guard");
@@ -152,23 +152,36 @@ function cooledDown(interaccion) {
   return null;
 }
 
-/** Guarda los feeds en el fichero de configuracion (si se puede escribir). */
+/** Guarda los feeds en el fichero propio del bot (la config con el token no se toca). */
 function guardarFeeds() {
-  const ruta = rutaPorDefecto();
+  const ruta = cfg.feedsFile;
   try {
-    const actual = fs.existsSync(ruta) ? JSON.parse(fs.readFileSync(ruta, "utf8")) : {};
-    actual.feeds = cliente.feeds.aJSON();
-    fs.writeFileSync(ruta, JSON.stringify(actual, null, 2));
+    fs.mkdirSync(path.dirname(ruta), { recursive: true });
+    fs.writeFileSync(ruta, JSON.stringify(cliente.feeds.aJSON(), null, 2));
     console.log(`Feeds guardados en ${ruta}`);
   } catch (e) {
     console.warn(`No se pudieron guardar los feeds: ${e.message}`);
   }
 }
 
+/** Feeds: los del fichero propio (los creados con /feed) + los de la config. */
+function leerFeeds() {
+  const delFichero = [];
+  try {
+    if (fs.existsSync(cfg.feedsFile)) {
+      const datos = JSON.parse(fs.readFileSync(cfg.feedsFile, "utf8"));
+      if (Array.isArray(datos)) delFichero.push(...datos);
+    }
+  } catch (e) {
+    console.warn(`No se pudo leer ${cfg.feedsFile}: ${e.message}`);
+  }
+  return [...(cfg.feeds || []), ...delFichero];
+}
+
 // ------------------------------------------------------------------ handlers
 cliente.once("ready", async () => {
   console.log(`R34pete conectado como ${cliente.user.tag}`);
-  cliente.feeds.cargarDesdeConfig(cfg);
+  cliente.feeds.cargarDesdeConfig(leerFeeds());
   await registrarComandos();
 });
 
