@@ -50,6 +50,7 @@ jobs:
           CLOUDFLARE_API_KEY: ${{ secrets.CLOUDFLARE_API_KEY }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           HORDE_API_KEY: ${{ secrets.HORDE_API_KEY }}
+          XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
         run: |
           mkdir -p .r34pete
           cp config.github.json .r34pete/config.json
@@ -75,6 +76,7 @@ jobs:
             cfg.ia.claves.cloudflare = process.env.CLOUDFLARE_API_KEY || cfg.ia.claves.cloudflare || "";
             cfg.ia.claves.cloudflare_account = process.env.CLOUDFLARE_ACCOUNT_ID || cfg.ia.claves.cloudflare_account || "";
             cfg.ia.claves.horde = process.env.HORDE_API_KEY || cfg.ia.claves.horde || "";
+            cfg.ia.claves.xai = process.env.XAI_API_KEY || cfg.ia.claves.xai || "";
             fs.writeFileSync(p, JSON.stringify(cfg, null, 2));
           '
           chmod 600 .r34pete/config.json

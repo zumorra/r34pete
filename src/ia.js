@@ -16,6 +16,7 @@
  * - mistral     online, gratis con clave (La Plateforme).
  * - cloudflare  online, gratis con clave (Workers AI: 10.000 neuronas/dia).
  * - horde       online, gratis con clave (AI Horde, comunidad voluntaria).
+ * - xai         online, DE PAGO (Grok): la clave necesita creditos en el equipo.
  *
  * Para openrouter, el modelo se puede poner de dos formas:
  *   - "openrouter/free": el router de modelos gratuitos; nunca cae a uno de pago.
@@ -180,6 +181,12 @@ const nvidia = (cfg, m) =>
 const mistral = (cfg, m) =>
   compatible(cfg, m, "mistral", "https://api.mistral.ai/v1/chat/completions", cfg.mistral_modelo);
 
+// ---------------------------------------------------------------------- xai/grok
+// Compatible con OpenAI. OJO: xAI no es gratis: la clave necesita creditos
+// en el equipo (console.x.ai/team/...), si no el API responde 403.
+const xai = (cfg, m) =>
+  compatible(cfg, m, "xai", "https://api.x.ai/v1/chat/completions", cfg.xai_modelo);
+
 // --------------------------------------------------------- cloudflare workers ai
 // Necesita la clave de la API y el id de cuenta (los dos van en ia.claves).
 async function cloudflare(cfg, mensajes) {
@@ -241,7 +248,7 @@ async function horde(cfg, mensajes) {
   throw new Error("horde: se agoto el tiempo de espera");
 }
 
-const BACKENDS = { ollama, pollinations, gemini, groq, openrouter, cerebras, nvidia, mistral, cloudflare, horde };
+const BACKENDS = { ollama, pollinations, gemini, groq, openrouter, cerebras, nvidia, mistral, cloudflare, horde, xai };
 
 /**
  * Responde con el primer backend que funcione.
