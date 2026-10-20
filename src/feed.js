@@ -129,6 +129,9 @@ class Feed {
       embeds: [embed],
       files: [{ attachment: buffer, name: `r34pete.${ext}` }],
     });
+    console.log(
+      `[feed ${this.id}] publicado id ${elegido.id} (${elegido.ext}, ${Math.round(buffer.length / 1024)} KB) en ${this.canalId}`
+    );
     this.ultimo = Date.now();
   }
 }
