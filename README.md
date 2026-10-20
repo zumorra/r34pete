@@ -113,6 +113,66 @@ si no cabe ninguno, usa la versión pequeña que da el tablero.
 5. Los tableros se piden con un User-Agent propio y con espera entre
    peticiones, como piden sus reglas de uso.
 
+## Hosting: todo online
+
+El bot **no debe correr en tu PC**: en la nube, con la IA también online.
+
+### Opción A (la que ya está montada): GitHub Actions — gratis, sin tarjeta
+
+Un workflow mantiene el bot **siempre en línea** en los runners gratuitos de
+GitHub: en un repositorio **público** los minutos son ilimitados y no hace
+falta tarjeta ni cuenta de nube. Workflow en `.github/workflows/r34pete.yml`:
+
+- `schedule` cada 5 h y `workflow_dispatch` para arrancarlo a mano.
+- Cada sesión dura hasta 5 h 20 min (límite de Actions: 6 h) y el cron la releva.
+- Secretos (`DISCORD_TOKEN`, `RULE34_API_KEY`, `RULE34_USER_ID`) en
+  *Settings → Secrets*, nunca en el repo.
+- El registro de "ya publicado" (`vistos.json`) se siembra desde el repo y se
+  guarda de vuelta, así que no repite entre sesiones.
+
+Puesta en marcha (una vez):
+
+```bash
+gh secret set DISCORD_TOKEN  < token.txt
+gh secret set RULE34_API_KEY < clave.txt
+gh secret set RULE34_USER_ID < id.txt
+gh repo edit --visibility public   # minutos ilimitados de Actions en repos publicos
+gh workflow run r34pete.yml
+```
+
+Ventajas: gratis de verdad, sin tarjeta, sin mantenimiento. Inconvenientes: el
+arranque puede retrasarse unos minutos y, si el repo pasa a privado, se
+acabarían los minutos gratis (2.000/mes).
+
+### Opción B: una máquina cloud de verdad
+
+| Opción | Coste | ¿24/7? | Límites verificados en la doc oficial | Avisos |
+|---|---|---|---|---|
+| **Oracle micro** `VM.Standard.E2.1.Micro` | 0 € | sí | 2 instancias, 1/8 OCPU, 1 GB RAM, IP pública, 50 Mbps, disco ≥ 50 GB. | La de **1 GB no tiene la regla de inactividad por memoria** → la más segura para un bot parado. |
+| **Oracle A1** `VM.Standard.A1.Flex` | 0 € | sí | 2 OCPU + 12 GB (1.500 OCPU-h y 9.000 GB-h al mes). ARM. | **Ojo:** Oracle *reclama* las instancias Always Free ociosas si en 7 días la CPU (p95) < 20 %, la red < 20 % o la memoria < 20 % (solo A1). Se evita subiendo a *Pay as You Go*: los recursos Always Free siguen gratis. |
+| **GCP e2-micro** | 0 € | sí | 1 instancia **no preemptible** en us-west1 / us-central1 / us-east1 + 30 GB de disco. | **Solo 1 GB de salida al mes**: un bot que sirve imágenes lo agota y acaba pagando. Oracle da 10 TB. |
+| **Railway** | 5 $/mes | sí | Trial de 5 $ (30 días) **sin tarjeta**; luego plan Hobby. | La única sin tarjeta, pero de pago. |
+| Koyeb Free | 0 € | **no** | 5 h/mes. | Descartado. |
+| HF Spaces CPU | 0 € | **no** | Duerme tras inactividad. | Descartado. |
+| GitHub Codespaces | 0 € | **no** | 60 h/mes (≈2 h/día). | Descartado. |
+
+### Oracle en 4 pasos
+
+1. `cloud.oracle.com/free` → *Start for free* (móvil y **tarjeta para verificar**;
+   no cobran nada salvo que subas de plan).
+2. **Create instance** → shape `VM.Standard.E2.1.Micro` (recomendado para un
+   bot parado) o `VM.Standard.A1.Flex` con **2 OCPU y 12 GB** → Ubuntu 22.04/24.04.
+3. Red: VCN por defecto, subred pública, **ingress 22/tcp** (SSH) y sube tu
+   clave pública (`~/.ssh/r34pete_oci.pub`).
+4. *Advanced options → Cloud-init script*: pega `cloud-init.sh` (prepara Node,
+   el usuario y el servicio).
+
+Y luego, desde la master:
+
+```bash
+bash ~/superyuki-arreglos/r34pete/desplegar-remoto.sh <IP_PUBLICA> ubuntu ~/.ssh/r34pete_oci
+```
+
 ## Instalación
 
 ### En cualquier Linux (Ubuntu / Oracle Linux)
