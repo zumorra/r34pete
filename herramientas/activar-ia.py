@@ -78,6 +78,11 @@ PROVEEDORES = {
         "donde": "https://dash.cloudflare.com/ (API Tokens + id de cuenta)",
         "estilo": "cloudflare",
     },
+    "xai": {
+        "url": "https://api.x.ai/v1/chat/completions",
+        "modelo": "grok-4",
+        "donde": "https://console.x.ai/ (la clave NO vale sin creditos en el equipo)",
+    },
     "horde": {
         "url": "https://stablehorde.net/api/v2",
         "modelo": "meta-llama/Meta-Llama-3.3-70B-Instruct",
@@ -124,6 +129,8 @@ def comprobar(nombre, clave, extra):
         return True, f"HTTP {status}: el proveedor acepto la peticion"
     except urllib.error.HTTPError as e:
         detalle = e.read().decode("utf-8", "replace")[:160]
+        if e.code == 403 and "credits" in detalle:
+            return False, "HTTP 403: la clave es valida pero el equipo NO tiene creditos (console.x.ai/team/...)"
         if e.code in (401, 403):
             return False, f"HTTP {e.code}: la clave no es valida ({detalle})"
         if e.code == 400:
