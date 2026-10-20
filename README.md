@@ -5,17 +5,39 @@ tableros de booru y publica un **feed automático** en canales con restricción
 de edad. Node.js + discord.js, pensado para correr en una instancia gratuita
 de Oracle Cloud.
 
-- `/buscar tags:… fuente:…` → postea un resultado al azar.
-- `/feed anadir canal:… tags:…` → feed automático cada X minutos.
+- `/buscar tags:… fuente:… medio:…` → postea un resultado al azar.
+- `/feed anadir canal:… tags:… medio:…` → feed automático cada X minutos.
 - `/feed listar` · `/feed borrar id:…` · `/estado` · `/ayuda`.
+
+## Palabras clave (mini-idioma)
+
+Escribes palabras sueltas y el bot las traduce a etiquetas y al tipo de
+archivo que quieres:
+
+| Escribes | Busca | Detalle |
+|---|---|---|
+| `furry` | `anthro` | e621 no tiene etiqueta «furry»: lo anthro es `anthro` + especies |
+| `canine` `feline` `fox` `wolf` `dragon` `quadruped` | la especie | etiquetas de especie de e621 |
+| `futa` | `futa` | etiqueta directa |
+| `gif` | `animated` | y solo archivos `.gif` |
+| `videos` / `video` | `animated` | y solo `.webm`/`.mp4` (Discord los reproduce) |
+| `imagen` | — | solo imágenes fijas |
+
+Se pueden combinar: `/buscar furry videos` busca anthro en `.webm`.
+Si una palabra no está en la tabla, se usa tal cual como etiqueta
+(estilo danbooru).
+
+Los `.webm` de e621 pesan entre 3 y 90 MB: el bot se queda con los que caben
+en el límite de subida de Discord (`guards.maxUploadMb`, 25 MB por defecto) y,
+si no cabe ninguno, usa la versión pequeña que da el tablero.
 
 ## Tableros
 
 | Tablero | Credenciales | Notas |
 |---|---|---|
 | rule34 | **user_id + api_key** | El que más material de adultos tiene. La API ahora **exige clave**: se saca en `rule34.xxx` → *Ajustes de la cuenta*. |
-| e621 | ninguna | Funciona con un User-Agent identificable; trae contenido `rating:explicit`. |
-| danbooru | ninguna | Funciona; su contenido explícito está filtrado para cuentas anónimas. |
+| e621 | ninguna | Funciona con un User-Agent identificable; trae contenido `rating:explicit`, `.gif` y `.webm`. |
+| danbooru | ninguna | Funciona; su contenido explícito está filtrado para cuentas anónimas; sus animaciones son `.gif`. |
 | gelbooru | user_id + api_key | Apagado por defecto. |
 
 ## Guardas (siempre activas)

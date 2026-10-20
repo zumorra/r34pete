@@ -17,13 +17,14 @@ const {
   Client,
   GatewayIntentBits,
   EmbedBuilder,
-  SlashCommandBuilder,
   PermissionFlagsBits,
   ChannelType,
 } = require("discord.js");
 
 const { cargar } = require("./config");
 const proveedores = require("./providers");
+const presets = require("./presets");
+const { COMANDOS } = require("./comandos");
 const { GestorFeeds } = require("./feed");
 const guard = require("./guard");
 
@@ -39,83 +40,33 @@ cliente.feeds = new GestorFeeds(cliente);
 
 const COOLDOWNS = new Map();
 
+/** Elige un resultado que quepa en el límite de subida de Discord. */
+function elegirPdescargable(resultados, maxMb) {
+  const limite = maxMb * 1024 * 1024;
+  const caben = resultados.filter((r) => !r.size || r.size <= limite);
+  if (caben.length) return caben[Math.floor(Math.random() * caben.length)];
+  // Ninguno cabe: se usa la version pequeña (muestra) si el tablero la tiene.
+  const conMuestra = resultados.filter((r) => r.muestra);
+  if (conMuestra.length) return conMuestra[Math.floor(Math.random() * conMuestra.length)];
+  return null;
+}
+
+/** URL a descargar: la original, o la muestra si la original no cabe. */
+function urlDeDescarga(post, maxMb) {
+  const limite = maxMb * 1024 * 1024;
+  if (post.size && post.size > limite && post.muestra) return post.muestra;
+  return post.url;
+}
+
+/** Nombre del adjunto con la extensión correcta (Discord la usa para el vídeo). */
+function nombreArchivo(post) {
+  const ext = (post.ext || "").toLowerCase();
+  const validas = ["jpg", "jpeg", "png", "webp", "gif", "webm", "mp4"];
+  const e = validas.includes(ext) ? ext : post.tipo === "video" ? "webm" : "jpg";
+  return `r34pete.${e}`;
+}
+
 // ------------------------------------------------------------------ comandos
-const COMANDOS = [
-  new SlashCommandBuilder()
-    .setName("buscar")
-    .setDescription("Busca por etiquetas y postea un resultado al azar.")
-    .addStringOption((o) =>
-      o.setName("tags").setDescription("Etiquetas separadas por espacios.").setRequired(true)
-    )
-    .addStringOption((o) =>
-      o
-        .setName("fuente")
-        .setDescription("Tablero donde buscar.")
-        .setRequired(false)
-        .addChoices(
-          { name: "rule34", value: "rule34" },
-          { name: "e621", value: "e621" },
-          { name: "danbooru", value: "danbooru" },
-          { name: "gelbooru", value: "gelbooru" }
-        )
-    ),
-
-  new SlashCommandBuilder()
-    .setName("feed")
-    .setDescription("Feeds automaticos por canal.")
-    .addSubcommand((s) =>
-      s
-        .setName("listar")
-        .setDescription("Muestra los feeds configurados.")
-    )
-    .addSubcommand((s) =>
-      s
-        .setName("anadir")
-        .setDescription("Crea un feed automatico en un canal.")
-        .addChannelOption((o) =>
-          o.setName("canal").setDescription("Canal con restriccion de edad.").setRequired(true)
-        )
-        .addStringOption((o) =>
-          o.setName("tags").setDescription("Etiquetas del feed.").setRequired(true)
-        )
-        .addStringOption((o) =>
-          o
-            .setName("fuente")
-            .setDescription("Tablero.")
-            .setRequired(false)
-            .addChoices(
-              { name: "rule34", value: "rule34" },
-              { name: "e621", value: "e621" },
-              { name: "danbooru", value: "danbooru" },
-              { name: "gelbooru", value: "gelbooru" }
-            )
-        )
-        .addIntegerOption((o) =>
-          o
-            .setName("minutos")
-            .setDescription("Cada cuantos minutos publica (minimo 5).")
-            .setMinValue(5)
-            .setMaxValue(10080)
-        )
-    )
-    .addSubcommand((s) =>
-      s
-        .setName("borrar")
-        .setDescription("Borra un feed por su id.")
-        .addStringOption((o) =>
-          o.setName("id").setDescription("Id del feed (lo da /feed listar).").setRequired(true)
-        )
-    ),
-
-  new SlashCommandBuilder()
-    .setName("estado")
-    .setDescription("Resumen del bot."),
-
-  new SlashCommandBuilder()
-    .setName("ayuda")
-    .setDescription("Como se usa el bot."),
-];
-
 async function registrarComandos() {
   const cuerpo = COMANDOS.map((c) => c.toJSON());
   if (cfg.guildId) {
@@ -208,11 +159,20 @@ async function cmdBuscar(interaccion) {
   if (motivo) return respuestaEphemeral(interaccion, motivo);
 
   const fuente = interaccion.options.getString("fuente") || "e621";
-  const tags = guard.normalizarTags(interaccion.options.getString("tags"));
+  const entrada = interaccion.options.getString("tags");
+  const medioOpcion = interaccion.options.getString("medio");
+  const { tags, medio, traducciones } = presets.interpretar(entrada, medioOpcion);
   try {
-    guard.revisarTexto(tags);
+    guard.revisarTexto(entrada);
+    guard.revisarTags(tags);
   } catch (e) {
     return respuestaEphemeral(interaccion, e.message);
+  }
+  if (!tags) {
+    return respuestaEphemeral(
+      interaccion,
+      "Dime qué buscar. Ejemplos: `furry`, `futa`, `gif`, `videos`, `furry videos`."
+    );
   }
 
   const disponibles = proveedores.disponibles(cfg);
@@ -233,25 +193,44 @@ async function cmdBuscar(interaccion) {
       cfg,
       fuente,
       tags,
-      cfg.guards.maxResults || 40
+      cfg.guards.maxResults || 40,
+      medio
     );
     if (!resultados.length) {
-      return await interaccion.editReply("No encontre nada con esas etiquetas.");
+      return await interaccion.editReply(
+        `No encontre nada **${medio}** con \`${tags}\` en ${fuente}.`
+      );
     }
-    const elegido = resultados[Math.floor(Math.random() * resultados.length)];
-    const { buffer } = await proveedores.descargar(elegido.url, cfg.userAgent);
+    const elegido = elegirPdescargable(resultados, cfg.guards.maxUploadMb || 25);
+    if (!elegido) {
+      return await interaccion.editReply(
+        `Hay ${resultados.length} resultados, pero todos pasan del límite de ` +
+          `${cfg.guards.maxUploadMb || 25} MB que acepta Discord.`
+      );
+    }
+    const { buffer } = await proveedores.descargar(
+      urlDeDescarga(elegido, cfg.guards.maxUploadMb || 25),
+      cfg.userAgent
+    );
     const embed = new EmbedBuilder()
       .setColor(0x9b30ff)
       .setTitle("Resultado")
       .addFields(
         { name: "Tablero", value: elegido.source, inline: true },
-        { name: "id", value: elegido.id || "-", inline: true }
+        { name: "id", value: elegido.id || "-", inline: true },
+        { name: "Medio", value: elegido.tipo || medio, inline: true }
       );
     if (elegido.tags) embed.addFields({ name: "Etiquetas", value: elegido.tags.slice(0, 1000) });
+    if (traducciones.length) {
+      embed.addFields({
+        name: "Traducido",
+        value: traducciones.join(" · ").slice(0, 500),
+      });
+    }
     if (elegido.pageUrl) embed.setURL(elegido.pageUrl);
     await interaccion.editReply({
       embeds: [embed],
-      files: [{ attachment: buffer, name: "r34pete.jpg" }],
+      files: [{ attachment: buffer, name: nombreArchivo(elegido) }],
     });
   } catch (e) {
     console.error(e);
@@ -290,9 +269,14 @@ async function cmdFeed(interaccion) {
         "Ese canal no tiene la **restriccion de edad** activada. Activala antes de crear el feed."
       );
     }
-    const tags = guard.normalizarTags(interaccion.options.getString("tags"));
+    const entrada = interaccion.options.getString("tags");
+    const { tags, medio } = presets.interpretar(
+      entrada,
+      interaccion.options.getString("medio")
+    );
     try {
-      guard.revisarTexto(tags);
+      guard.revisarTexto(entrada);
+      guard.revisarTags(tags);
     } catch (e) {
       return respuestaEphemeral(interaccion, e.message);
     }
@@ -308,13 +292,15 @@ async function cmdFeed(interaccion) {
       canalId: canal.id,
       proveedor: fuente,
       tags,
+      medio,
       cadaMinutos: minutos,
       activado: true,
     });
     guardarFeeds();
     return respuestaEphemeral(
       interaccion,
-      `Feed **${feed.id}** creado en <#${canal.id}>: cada ${minutos} min, ${fuente}, \`${tags}\`.`
+      `Feed **${feed.id}** creado en <#${canal.id}>: cada ${minutos} min, ${fuente}, ` +
+        `${medio}, \`${tags}\`.`
     );
   }
 
@@ -351,12 +337,21 @@ async function cmdAyuda(interaccion) {
     .setColor(0x9b30ff)
     .setTitle("R34pete — ayuda")
     .setDescription(
-      "Bot de contenido de adultos: busca imagenes por etiquetas y publica feeds automaticos.\n" +
+      "Bot de contenido de adultos: busca imagenes y animaciones por etiquetas y publica feeds automaticos.\n" +
         "Solo funciona en canales con **Restriccion de edad** activada."
     )
     .addFields(
-      { name: "/buscar", value: "Busca por etiquetas y postea un resultado." },
-      { name: "/feed anadir", value: "Crea un feed automatico en un canal (permiso de gestionar canales)." },
+      {
+        name: "/buscar",
+        value:
+          "`furry` `futa` `gif` `videos` `canine` `feline` `dragon`…\n" +
+          "Las palabras sueltas se traducen solas: **furry**→`anthro`, **gif**→animado en .gif, " +
+          "**videos**→animado en .webm/.mp4 (Discord lo reproduce). Se pueden combinar: `furry videos`.",
+      },
+      {
+        name: "/feed anadir",
+        value: "Crea un feed automatico en un canal (permiso de gestionar canales).",
+      },
       { name: "/feed listar", value: "Muestra los feeds." },
       { name: "/feed borrar", value: "Borra un feed por id." },
       { name: "/estado", value: "Resumen." }

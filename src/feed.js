@@ -18,6 +18,7 @@ class Feed {
     this.canalId = String(datos.canalId);
     this.proveedor = datos.proveedor || "e621";
     this.tags = datos.tags || "";
+    this.medio = datos.medio || "imagen";
     this.cadaMinutos = Math.max(5, Number(datos.cadaMinutos || 30));
     this.activado = datos.activado !== false;
     this.etiquetasPermitidas = datos.etiquetasPermitidas || null;
@@ -33,6 +34,7 @@ class Feed {
       canalId: this.canalId,
       proveedor: this.proveedor,
       tags: this.tags,
+      medio: this.medio,
       cadaMinutos: this.cadaMinutos,
       activado: this.activado,
       etiquetasPermitidas: this.etiquetasPermitidas,
@@ -72,7 +74,13 @@ class Feed {
     }
 
     const limite = this.etiquetasPermitidas ? this.etiquetasPermitidas.length : 40;
-    const resultados = await proveedores.buscar(this.cliente.cfg, this.proveedor, this.tags, limite);
+    const resultados = await proveedores.buscar(
+      this.cliente.cfg,
+      this.proveedor,
+      this.tags,
+      limite,
+      this.medio
+    );
     if (!resultados.length) return;
 
     let elegido = null;
@@ -94,7 +102,8 @@ class Feed {
       .setTitle("Feed")
       .addFields(
         { name: "Tablero", value: elegido.source, inline: true },
-        { name: "id", value: elegido.id || "-", inline: true }
+        { name: "id", value: elegido.id || "-", inline: true },
+        { name: "Medio", value: elegido.tipo || this.medio, inline: true }
       );
     if (elegido.tags) {
       embed.addFields({ name: "Etiquetas", value: elegido.tags.slice(0, 1000) });
@@ -102,7 +111,16 @@ class Feed {
     if (elegido.pageUrl) {
       embed.setURL(elegido.pageUrl);
     }
-    await canal.send({ embeds: [embed], files: [{ attachment: buffer, name: "r34pete.jpg" }] });
+    const validas = ["jpg", "jpeg", "png", "webp", "gif", "webm", "mp4"];
+    const ext = validas.includes((elegido.ext || "").toLowerCase())
+      ? (elegido.ext || "").toLowerCase()
+      : elegido.tipo === "video"
+        ? "webm"
+        : "jpg";
+    await canal.send({
+      embeds: [embed],
+      files: [{ attachment: buffer, name: `r34pete.${ext}` }],
+    });
     this.ultimo = Date.now();
   }
 }

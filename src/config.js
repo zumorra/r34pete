@@ -36,6 +36,8 @@ const POR_DEFECTO = {
     cooldownSeconds: 20,
     // Maximo de resultados que se piden por busqueda.
     maxResults: 40,
+    // Limite de subida de Discord (25 MB por defecto; 50 MB con boost).
+    maxUploadMb: 25,
   },
   feeds: [],
   // Fichero propio (escribible por el bot) donde se guardan los feeds
