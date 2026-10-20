@@ -327,8 +327,11 @@ async function descargarApto(candidatos, maxMb, userAgent) {
       try {
         const { buffer } = await descargar(url, userAgent);
         if (buffer.length <= limite) return { post, buffer };
+        console.warn(
+          `descargarApto: ${post.id} pesa ${Math.round(buffer.length / 1024)} KB, no cabe`
+        );
       } catch (e) {
-        /* siguiente candidato */
+        console.warn(`descargarApto: fallo con ${post.id} (${e.message})`);
       }
     }
   }

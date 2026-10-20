@@ -188,7 +188,7 @@ async function cmdBuscar(interaccion) {
     const vistos = cliente.vistos;
     let resultados = [];
     let nuevos = [];
-    for (let pagina = 0; pagina < 3 && !nuevos.length; pagina++) {
+    for (let pagina = 0; pagina < 6 && !nuevos.length; pagina++) {
       resultados = await proveedores.buscar(
         cfg,
         fuente,

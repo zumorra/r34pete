@@ -78,9 +78,10 @@ class Feed {
     // Se recorren varias paginas hasta encontrar algo que no se haya
     // publicado antes. El registro de vistos vive en disco, asi que el
     // bot no repite lo que ya posteo en una sesion anterior.
-    let elegido = null;
     let probadas = 0;
-    for (let salto = 0; salto < 4 && !elegido; salto++) {
+    let restantes = 0;
+    const candidatos = [];
+    for (let salto = 0; salto < 8 && candidatos.length < 10; salto++) {
       const pagina = this.pagina + salto;
       const resultados = await proveedores.buscar(
         this.cliente.cfg,
@@ -92,26 +93,53 @@ class Feed {
       );
       if (!resultados.length) continue;
       probadas++;
-      const nuevos = vistos ? vistos.sinVer(this.proveedor, resultados, this.id) : [];
-      const bolsa = nuevos.length ? nuevos : resultados;
-      elegido = bolsa[Math.floor(Math.random() * bolsa.length)];
-      if (vistos) vistos.marcar(this.proveedor, [elegido.id], this.id);
-    }
-    if (!elegido) {
-      console.warn(`[feed ${this.id}] no hay resultados en las paginas probadas`);
-      return;
+      const nuevos = vistos ? vistos.sinVer(this.proveedor, resultados, this.id) : resultados;
+      restantes += resultados.length - nuevos.length;
+      // Si esta pagina esta toda vista, se prueba la siguiente en vez de
+      // repetir: repetir solo pasa si no queda nada nuevo en ninguna pagina.
+      if (!nuevos.length) continue;
+      candidatos.push(...nuevos);
+      console.log(
+        `[feed ${this.id}] pagina ${pagina}: ${nuevos.length} sin ver de ${resultados.length}`
+      );
     }
     this.pagina = (this.pagina + Math.max(1, probadas)) % 20;
 
-    const { post: elegidoPost, buffer } = await proveedores.descargarApto(
-      [elegido],
+    if (!candidatos.length) {
+      // Ultimo recurso: se repite el primer resultado de la pagina actual.
+      const resultados = await proveedores.buscar(
+        this.cliente.cfg,
+        this.proveedor,
+        this.tags,
+        limite,
+        this.medio,
+        { pagina: this.pagina }
+      );
+      if (!resultados.length) {
+        console.warn(`[feed ${this.id}] no hay resultados en ${this.proveedor}`);
+        return;
+      }
+      candidatos.push(resultados[0]);
+      console.warn(
+        `[feed ${this.id}] no queda nada nuevo (${restantes} ya vistos): se repetira uno`
+      );
+    }
+
+    // Se prueba cada candidato hasta que uno se descargue bien y quepa.
+    const descargado = await proveedores.descargarApto(
+      candidatos,
       this.cliente.cfg.guards.maxUploadMb || 25,
       this.cliente.cfg.userAgent
     );
-    if (!elegidoPost) {
-      console.warn(`[feed ${this.id}] el archivo no cabe en el limite de subida`);
+    if (!descargado) {
+      console.warn(
+        `[feed ${this.id}] no se pudo descargar ninguno de los ${candidatos.length} candidatos`
+      );
       return;
     }
+    const elegidoPost = descargado.post;
+    const buffer = descargado.buffer;
+    if (vistos) vistos.marcar(this.proveedor, [elegidoPost.id], this.id);
     const embed = new EmbedBuilder()
       .setColor(0x9b30ff)
       .setTitle("Feed")
