@@ -23,7 +23,7 @@ class Feed {
     this.activado = datos.activado !== false;
     this.etiquetasPermitidas = datos.etiquetasPermitidas || null;
     this.cliente = cliente;
-    this.vistos = new Set();
+    this.pagina = 0;          // rota de pagina para no repetir
     this.timer = null;
     this.ultimo = 0;
   }
@@ -74,55 +74,63 @@ class Feed {
     }
 
     const limite = this.etiquetasPermitidas ? this.etiquetasPermitidas.length : 40;
-    const resultados = await proveedores.buscar(
-      this.cliente.cfg,
-      this.proveedor,
-      this.tags,
-      limite,
-      this.medio
-    );
-    if (!resultados.length) return;
+    const vistos = this.cliente.vistos;
 
-    const candidatos = [];
-    for (const p of resultados) {
-      if (!this.vistos.has(`${this.proveedor}:${p.id}`)) candidatos.push(p);
+    // Se recorren varias paginas hasta encontrar algo que no se haya
+    // publicado antes. El registro de vistos vive en disco, asi que el
+    // bot no repite lo que ya posteo en una sesion anterior.
+    let elegido = null;
+    let probadas = 0;
+    for (let salto = 0; salto < 4 && !elegido; salto++) {
+      const pagina = this.pagina + salto;
+      const resultados = await proveedores.buscar(
+        this.cliente.cfg,
+        this.proveedor,
+        this.tags,
+        limite,
+        this.medio,
+        { pagina }
+      );
+      if (!resultados.length) continue;
+      probadas++;
+      const nuevos = vistos.sinVer(this.proveedor, resultados, this.id);
+      const bolsa = nuevos.length ? nuevos : resultados;
+      elegido = bolsa[Math.floor(Math.random() * bolsa.length)];
+      vistos.marcar(this.proveedor, [elegido.id], this.id);
     }
-    // primero los que no se han visto; si no hay, se repite uno
-    for (const p of resultados) {
-      if (!candidatos.includes(p)) candidatos.push(p);
+    if (!elegido) {
+      console.warn(`[feed ${this.id}] no hay resultados en las paginas probadas`);
+      return;
     }
-    this.vistos.add(`${this.proveedor}:${candidatos[0].id}`);
-    if (this.vistos.size > 500) {
-      this.vistos = new Set([...this.vistos].slice(-200));
-    }
+    this.pagina = (this.pagina + Math.max(1, probadas)) % 20;
 
-    const { post: elegido, buffer } = await proveedores.descargarApto(
-      candidatos,
+    const { post: elegidoPost, buffer } = await proveedores.descargarApto(
+      [elegido],
       this.cliente.cfg.guards.maxUploadMb || 25,
       this.cliente.cfg.userAgent
     );
-    if (!elegido) {
-      console.warn(`[feed ${this.id}] ninguno de los ${candidatos.length} resultados cabe en el limite`);
+    if (!elegidoPost) {
+      console.warn(`[feed ${this.id}] el archivo no cabe en el limite de subida`);
       return;
     }
     const embed = new EmbedBuilder()
       .setColor(0x9b30ff)
       .setTitle("Feed")
       .addFields(
-        { name: "Tablero", value: elegido.source, inline: true },
-        { name: "id", value: elegido.id || "-", inline: true },
-        { name: "Medio", value: elegido.tipo || this.medio, inline: true }
+        { name: "Tablero", value: elegidoPost.source, inline: true },
+        { name: "id", value: elegidoPost.id || "-", inline: true },
+        { name: "Medio", value: elegidoPost.tipo || this.medio, inline: true }
       );
-    if (elegido.tags) {
-      embed.addFields({ name: "Etiquetas", value: elegido.tags.slice(0, 1000) });
+    if (elegidoPost.tags) {
+      embed.addFields({ name: "Etiquetas", value: elegidoPost.tags.slice(0, 1000) });
     }
-    if (elegido.pageUrl) {
-      embed.setURL(elegido.pageUrl);
+    if (elegidoPost.pageUrl) {
+      embed.setURL(elegidoPost.pageUrl);
     }
     const validas = ["jpg", "jpeg", "png", "webp", "gif", "webm", "mp4"];
-    const ext = validas.includes((elegido.ext || "").toLowerCase())
-      ? (elegido.ext || "").toLowerCase()
-      : elegido.tipo === "video"
+    const ext = validas.includes((elegidoPost.ext || "").toLowerCase())
+      ? (elegidoPost.ext || "").toLowerCase()
+      : elegidoPost.tipo === "video"
         ? "webm"
         : "jpg";
     await canal.send({
@@ -130,7 +138,7 @@ class Feed {
       files: [{ attachment: buffer, name: `r34pete.${ext}` }],
     });
     console.log(
-      `[feed ${this.id}] publicado id ${elegido.id} (${elegido.ext}, ${Math.round(buffer.length / 1024)} KB) en ${this.canalId}`
+      `[feed ${this.id}] publicado id ${elegidoPost.id} (${elegidoPost.ext}, ${Math.round(buffer.length / 1024)} KB) en ${this.canalId}`
     );
     this.ultimo = Date.now();
   }

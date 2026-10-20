@@ -94,7 +94,7 @@ function conAnimado(tags, proveedor, medio) {
 }
 
 // --------------------------------------------------------------------- rule34
-async function rule34(cfg, tags, limit, medio) {
+async function rule34(cfg, tags, limit, medio, opciones = {}) {
   const p = cfg.providers.rule34 || {};
   if (!p.userId || !p.apiKey) {
     throw new ErrorProveedor(
@@ -112,6 +112,7 @@ async function rule34(cfg, tags, limit, medio) {
       json: 1,
       tags: conAnimado(tags, "rule34", medio),
       limit: Math.min(limit, 100),
+      pid: opciones.pagina || 0,
       user_id: p.userId,
       api_key: p.apiKey,
     },
@@ -145,11 +146,15 @@ async function rule34(cfg, tags, limit, medio) {
 }
 
 // ----------------------------------------------------------------------- e621
-async function e621(cfg, tags, limit, medio) {
+async function e621(cfg, tags, limit, medio, opciones = {}) {
   await esperarTurno("e621");
   const datos = await pedir(
     "https://e621.net/posts.json",
-    { tags: conAnimado(tags, "e621", medio), limit: Math.min(limit, 75) },
+    {
+      tags: conAnimado(tags, "e621", medio),
+      limit: Math.min(limit, 75),
+      page: (opciones.pagina || 0) + 1,
+    },
     cfg.userAgent
   );
   const lista = Array.isArray(datos.posts) ? datos.posts : [];
@@ -187,11 +192,15 @@ async function e621(cfg, tags, limit, medio) {
 }
 
 // ------------------------------------------------------------------ danbooru
-async function danbooru(cfg, tags, limit, medio) {
+async function danbooru(cfg, tags, limit, medio, opciones = {}) {
   await esperarTurno("danbooru");
   const datos = await pedir(
     "https://danbooru.donmai.us/posts.json",
-    { tags: conAnimado(tags, "danbooru", medio), limit: Math.min(limit, 100) },
+    {
+      tags: conAnimado(tags, "danbooru", medio),
+      limit: Math.min(limit, 100),
+      page: (opciones.pagina || 0) + 1,
+    },
     cfg.userAgent
   );
   const lista = Array.isArray(datos) ? datos : [];
@@ -217,7 +226,7 @@ async function danbooru(cfg, tags, limit, medio) {
 }
 
 // ------------------------------------------------------------------ gelbooru
-async function gelbooru(cfg, tags, limit, medio) {
+async function gelbooru(cfg, tags, limit, medio, opciones = {}) {
   const p = cfg.providers.gelbooru || {};
   await esperarTurno("gelbooru");
   const datos = await pedir(
@@ -229,6 +238,7 @@ async function gelbooru(cfg, tags, limit, medio) {
       json: 1,
       tags: conAnimado(tags, "gelbooru", medio),
       limit: Math.min(limit, 100),
+      pid: opciones.pagina || 0,
       user_id: p.userId,
       api_key: p.apiKey,
     },
@@ -277,14 +287,14 @@ function disponibles(cfg) {
  * Busca en un tablero.
  * @param medio "imagen" | "gif" | "video": filtra por tipo de archivo.
  */
-async function buscar(cfg, nombre, tags, limit = 40, medio = "imagen") {
+async function buscar(cfg, nombre, tags, limit = 40, medio = "imagen", opciones = {}) {
   const fn = PROVEEDORES[nombre];
   if (!fn) throw new ErrorProveedor(`Tablero desconocido: ${nombre}`, nombre);
   const p = (cfg.providers && cfg.providers[nombre]) || {};
   if (p.enabled === false) {
     throw new ErrorProveedor(`El tablero ${nombre} esta apagado en la configuracion.`, nombre);
   }
-  const lista = await fn(cfg, tags, Math.min(limit, LIMITE_MAXIMO), medio);
+  const lista = await fn(cfg, tags, Math.min(limit, LIMITE_MAXIMO), medio, opciones);
   if (medio === "imagen") return lista.filter((x) => x.tipo === "imagen" || x.tipo === "otro");
   return lista.filter((x) => x.tipo === medio);
 }

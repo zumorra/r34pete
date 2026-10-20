@@ -25,6 +25,7 @@ const { cargar } = require("./config");
 const proveedores = require("./providers");
 const presets = require("./presets");
 const { COMANDOS } = require("./comandos");
+const { Vistos } = require("./seen");
 const { GestorFeeds } = require("./feed");
 const guard = require("./guard");
 
@@ -181,20 +182,30 @@ async function cmdBuscar(interaccion) {
 
   await interaccion.deferReply({ ephemeral: false });
   try {
-    const resultados = await proveedores.buscar(
-      cfg,
-      fuente,
-      tags,
-      cfg.guards.maxResults || 40,
-      medio
-    );
+    // Se prueban varias paginas para no repetir lo recien visto.
+    const vistos = cliente.vistos;
+    let resultados = [];
+    let nuevos = [];
+    for (let pagina = 0; pagina < 3 && !nuevos.length; pagina++) {
+      resultados = await proveedores.buscar(
+        cfg,
+        fuente,
+        tags,
+        cfg.guards.maxResults || 40,
+        medio,
+        { pagina }
+      );
+      if (!resultados.length) break;
+      nuevos = vistos.sinVer(fuente, resultados, medio);
+    }
     if (!resultados.length) {
       return await interaccion.editReply(
         `No encontre nada **${medio}** con \`${tags}\` en ${fuente}.`
       );
     }
+    const bolsa = nuevos.length ? barajar(nuevos) : barajar(resultados);
     const descargado = await proveedores.descargarApto(
-      barajar(resultados),
+      bolsa,
       cfg.guards.maxUploadMb || 25,
       cfg.userAgent
     );
@@ -205,6 +216,7 @@ async function cmdBuscar(interaccion) {
     }
     const post = descargado.post;
     const buffer = descargado.buffer;
+    vistos.marcar(fuente, [post.id], medio);
     const embed = new EmbedBuilder()
       .setColor(0x9b30ff)
       .setTitle("Resultado")

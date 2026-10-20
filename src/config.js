@@ -43,6 +43,8 @@ const POR_DEFECTO = {
   // Fichero propio (escribible por el bot) donde se guardan los feeds
   // creados con /feed. La configuración con el token no se toca nunca.
   feedsFile: "/var/lib/r34pete/feeds.json",
+  // Registro de lo ya publicado, para no repetir.
+  vistosFile: "/var/lib/r34pete/vistos.json",
   logLevel: "info",
 };
 
@@ -78,6 +80,7 @@ function cargar(ruta = RUTA_POR_DEFECTO) {
   }
   if (process.env.RULE34_API_KEY) cfg.providers.rule34.apiKey = process.env.RULE34_API_KEY;
   if (process.env.R34PETE_FEEDS_FILE) cfg.feedsFile = process.env.R34PETE_FEEDS_FILE;
+  if (process.env.R34PETE_VISTOS_FILE) cfg.vistosFile = process.env.R34PETE_VISTOS_FILE;
 
   if (!cfg.token) {
     throw new Error(
