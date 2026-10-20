@@ -29,12 +29,10 @@ const guard = require("./guard");
 
 const cfg = cargar();
 const cliente = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-  ],
+  // Sin intents privilegiados: el bot no lee mensajes ni necesita la lista
+  // de miembros (el chequeo de rol se pide a la API cuando hace falta).
+  // Asi el bot no necesita revision de intents al pasar de 10.000 usuarios.
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
 });
 cliente.cfg = cfg;
 cliente.feeds = new GestorFeeds(cliente);
@@ -193,7 +191,7 @@ cliente.on("interactionCreate", async (interaccion) => {
 });
 
 async function cmdBuscar(interaccion) {
-  const motivo = guard.comprobarCanal(interaccion, cfg.guards);
+  const motivo = await guard.comprobarCanal(interaccion, cfg.guards);
   if (motivo) return respuestaEphemeral(interaccion, motivo);
 
   const fuente = interaccion.options.getString("fuente") || "e621";

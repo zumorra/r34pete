@@ -93,20 +93,36 @@ function tieneRolEdad(miembro, rolEdad) {
   if (!rolEdad) return true;
   if (!miembro || !miembro.roles) return false;
   return miembro.roles.cache.some(
-    (r) => r.name.toLowerCase() === String(rolEdad).toLowerCase() || r.id === String(rolEdad)
+    (r) => r.id === String(rolEdad) || (r.name || "").toLowerCase() === String(rolEdad).toLowerCase()
   );
 }
 
-/** Devuelve el motivo del rechazo, o null si puede continuar. */
-function comprobarCanal(interaccion, guards) {
+/**
+ * Devuelve el motivo del rechazo, o null si puede continuar.
+ * Es asincrono porque el rol puede tener que pedirse a la API (el bot no
+ * usa el intent de miembros).
+ */
+async function comprobarCanal(interaccion, guards) {
   if (guards.requireNsfwChannel && !canalEsNsfw(interaccion.channel)) {
     return (
       "Este canal no tiene la **restriccion de edad** activada. Activala en " +
       "*Ajustes del canal → Restriccion de edad* o usa otro canal."
     );
   }
-  if (!tieneRolEdad(interaccion.member, guards.ageRole)) {
-    return "Necesitas el rol de edad para usar este bot aqui.";
+  if (guards.ageRole) {
+    let miembro = interaccion.member;
+    const vacio =
+      !miembro || !miembro.roles || !miembro.roles.cache || !miembro.roles.cache.size;
+    if (vacio && interaccion.guild) {
+      try {
+        miembro = await interaccion.guild.members.fetch(interaccion.user.id);
+      } catch {
+        miembro = null;
+      }
+    }
+    if (!tieneRolEdad(miembro, guards.ageRole)) {
+      return "Necesitas el rol de edad para usar este bot aqui.";
+    }
   }
   return null;
 }
