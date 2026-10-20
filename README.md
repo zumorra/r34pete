@@ -9,6 +9,54 @@ de Oracle Cloud.
 - `/feed anadir canal:… tags:… medio:…` → feed automático cada X minutos.
 - `/feed listar` · `/feed borrar id:…` · `/estado` · `/ayuda`.
 
+## Chat automático con IA
+
+El bot **responde solo por privado** a quien le escriba, y en los canales del
+servidor solo si le mencionan o si usa el disparador (`!`).
+
+### Las instrucciones se editan tú
+
+El "prompt de sistema" vive en un fichero de texto:
+
+```
+sudo nano /etc/r34pete/instrucciones.md
+```
+
+El bot lo relee **solo cuando lo guardas** (sin reiniciar nada). Escribe ahí
+cómo quieres que hable: tono, longitud, si es coqueto, si se llama de una
+forma, etc.
+
+### Backends de IA (todos gratis)
+
+Se prueban en orden y, si uno falla, se pasa al siguiente:
+
+| Backend | Clave | Notas |
+|---|---|---|
+| `ollama` | no | **Local** en la master: gratis, ilimitado, sin censura y rapidísimo (0,5 s). |
+| `pollinations` | no | **Online y sin clave**: 1 respuesta cada 30 s por IP. |
+| `gemini` | sí | Google AI Studio, tier gratis. |
+| `groq` | sí | console.groq.com, tier gratis y muy rápido. |
+| `openrouter` | sí | modelos marcados como `free`. |
+
+Las claves se guardan en `/etc/r34pete/config.json` (`ia.claves`), con
+permisos `640`. Para añadir una:
+
+```bash
+sudo nano /etc/r34pete/config.json     # "ia": { "claves": { "groq": "gsk_..." } }
+sudo systemctl restart r34pete
+```
+
+### Comandos del chat
+
+| Comando | Qué hace |
+|---|---|
+| `/instrucciones` | Muestra las instrucciones que sigue el bot. |
+| `/ia` | Estado de la IA (backend activo, modo en DM y en canales). |
+| `/olvidar` | Borra la memoria de conversación de ese usuario. |
+
+En memoria recuerda los últimos 12 mensajes por usuario (`chat.maximo_historial`),
+así que el chat mantiene el contexto.
+
 ## Palabras clave (mini-idioma)
 
 Escribes palabras sueltas y el bot las traduce a etiquetas y al tipo de
