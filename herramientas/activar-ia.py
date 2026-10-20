@@ -145,13 +145,21 @@ def guardar(nombre, clave, extra):
     print(f"guardada en {CONFIG}")
 
 
-def secreto_github(nombre, clave):
+def secreto_github(nombre, clave, extra=""):
+    # El workflow lee <PROVEEDOR>_API_KEY (y CLOUDFLARE_ACCOUNT_ID aparte).
     try:
-        subprocess.run(["gh", "secret", "set", f"IA_{nombre.upper()}", "--body", clave],
+        subprocess.run(["gh", "secret", "set", f"{nombre.upper()}_API_KEY", "--body", clave],
                        check=True, capture_output=True)
-        print(f"secreto IA_{nombre.upper()} creado en {REPO}")
+        print(f"secreto {nombre.upper()}_API_KEY creado en {REPO}")
     except subprocess.CalledProcessError as e:
         print(f"no se pudo crear el secreto de GitHub: {e.stderr.decode()[:120]}")
+    if extra:
+        try:
+            subprocess.run(["gh", "secret", "set", "CLOUDFLARE_ACCOUNT_ID", "--body", extra],
+                           check=True, capture_output=True)
+            print("secreto CLOUDFLARE_ACCOUNT_ID creado")
+        except subprocess.CalledProcessError:
+            pass
 
 
 def main():
@@ -186,7 +194,7 @@ def main():
             print("no se guarda nada (la clave no vale)")
             continue
         guardar(nombre, clave, extra)
-        secreto_github(nombre, clave)
+        secreto_github(nombre, clave, extra)
 
     print("\nListo. Para que las use el bot, anade el proveedor al orden:")
     print('  "ia": { "orden": ["pollinations", "groq", ...] }')

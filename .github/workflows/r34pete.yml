@@ -44,6 +44,12 @@ jobs:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
+          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          CLOUDFLARE_API_KEY: ${{ secrets.CLOUDFLARE_API_KEY }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          HORDE_API_KEY: ${{ secrets.HORDE_API_KEY }}
         run: |
           mkdir -p .r34pete
           cp config.github.json .r34pete/config.json
@@ -63,6 +69,12 @@ jobs:
             cfg.ia.claves.openrouter = process.env.OPENROUTER_API_KEY || cfg.ia.claves.openrouter || "";
             cfg.ia.claves.gemini = process.env.GEMINI_API_KEY || cfg.ia.claves.gemini || "";
             cfg.ia.claves.groq = process.env.GROQ_API_KEY || cfg.ia.claves.groq || "";
+            cfg.ia.claves.cerebras = process.env.CEREBRAS_API_KEY || cfg.ia.claves.cerebras || "";
+            cfg.ia.claves.nvidia = process.env.NVIDIA_API_KEY || cfg.ia.claves.nvidia || "";
+            cfg.ia.claves.mistral = process.env.MISTRAL_API_KEY || cfg.ia.claves.mistral || "";
+            cfg.ia.claves.cloudflare = process.env.CLOUDFLARE_API_KEY || cfg.ia.claves.cloudflare || "";
+            cfg.ia.claves.cloudflare_account = process.env.CLOUDFLARE_ACCOUNT_ID || cfg.ia.claves.cloudflare_account || "";
+            cfg.ia.claves.horde = process.env.HORDE_API_KEY || cfg.ia.claves.horde || "";
             fs.writeFileSync(p, JSON.stringify(cfg, null, 2));
           '
           chmod 600 .r34pete/config.json
