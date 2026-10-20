@@ -26,6 +26,9 @@ const proveedores = require("./providers");
 const presets = require("./presets");
 const { COMANDOS } = require("./comandos");
 const { Vistos } = require("./seen");
+const { Instrucciones } = require("./instrucciones");
+const { Historial } = require("./historial");
+const ia = require("./ia");
 const { GestorFeeds } = require("./feed");
 const guard = require("./guard");
 
@@ -40,8 +43,14 @@ cliente.cfg = cfg;
 cliente.feeds = new GestorFeeds(cliente);
 // Registro de lo ya publicado, en disco: evita repetir entre reinicios.
 cliente.vistos = new Vistos(cfg.vistosFile);
+// Chat automatico: instrucciones (fichero, recarga en caliente), memoria de
+// conversacion y configuracion de IA.
+cliente.instrucciones = new Instrucciones(cfg.chat.instrucciones);
+cliente.historial = new Historial(cfg.chat.maximo_historial);
+cliente.iaCfg = cfg.ia;
 
 const COOLDOWNS = new Map();
+const CHAT_COOLDOWNS = new Map();
 
 /** Mezcla una lista (para no repetir siempre el mismo resultado). */
 function barajar(lista) {
@@ -124,6 +133,84 @@ function leerFeeds() {
   return [...(cfg.feeds || []), ...delFichero];
 }
 
+
+// ---------------------------------------------------------------- chat por DM
+// Responde automaticamente a quien escriba al bot por privado, y en los
+// canales del servidor solo si le mencionan o si usa el disparador.
+cliente.on("messageCreate", async (mensaje) => {
+  await manejarChat(mensaje);
+});
+
+/**
+ * Logica del chat automatico. Se separa del evento para poder probarla
+ * sin un evento real de Discord.
+ */
+async function manejarChat(mensaje) {
+  if (!cfg.chat.habilitado) return;
+  if (mensaje.author.bot && !cfg.chat.responder_a_bots) return;
+  if (cliente.user && mensaje.author.id === cliente.user.id) return;
+  if (!mensaje.content || !mensaje.content.trim()) return;
+
+  const esDM = mensaje.channel.type === ChannelType.DM;
+  const idBot = cliente.user ? cliente.user.id : null;
+  const menciona = idBot && mensaje.mentions.users.has(idBot);
+  const disparador = cfg.chat.disparador || "!";
+  const conDisparador =
+    disparador && mensaje.content.trim().toLowerCase().startsWith(disparador.toLowerCase());
+
+  if (esDM) {
+    if (cfg.chat.en_dm !== "siempre") return;
+  } else {
+    if (cfg.chat.en_canales === "nunca") return;
+    if (cfg.chat.en_canales === "mencion" && !menciona && !conDisparador) return;
+  }
+
+  try {
+    guard.revisarTexto(mensaje.content);
+  } catch (e) {
+    return mensaje.reply(e.message).catch(() => {});
+  }
+
+  const ahora = Date.now();
+  const previo = CHAT_COOLDOWNS.get(mensaje.author.id) || 0;
+  const cd = (cfg.chat.cooldown_s || 5) * 1000;
+  if (ahora - previo < cd) return;
+  CHAT_COOLDOWNS.set(mensaje.author.id, ahora);
+
+  const texto = (conDisparador && !esDM ? mensaje.content.slice(disparador.length).trim() : mensaje.content).trim();
+  if (!texto) return;
+
+  try {
+    await mensaje.channel.sendTyping().catch(() => {});
+    const historial = cliente.historial.ultimos(mensaje.author.id);
+    const mensajes = [
+      { role: "system", content: cliente.instrucciones.actual() },
+      ...historial,
+      { role: "user", content: texto },
+    ];
+    const r = await ia.responder(cliente.iaCfg, mensajes);
+    cliente.historial.anadir(mensaje.author.id, "user", texto);
+    cliente.historial.anadir(mensaje.author.id, "assistant", r.texto);
+    console.log(`[chat] ${mensaje.author.tag} en ${mensaje.channel.type === ChannelType.DM ? "DM" : mensaje.channel.name}: ${r.backend}/${r.modelo}`);
+    await enviarPartido(mensaje, r.texto);
+    return r.texto;
+  } catch (e) {
+    console.error(`[chat] fallo: ${e.message}`);
+    await mensaje
+      .reply("Ahora mismo no puedo responder (se acabo la cuota o la IA no responde). Intentalo en un momento.")
+      .catch(() => {});
+  }
+}
+
+/** Envia un texto largo partido en trozos que quepan en un mensaje. */
+async function enviarPartido(mensaje, texto) {
+  const trozos = String(texto).match(/[\s\S]{1,1900}/g) || [String(texto)];
+  for (const trozo of trozos) {
+    await mensaje.reply(trozo).catch(() => {});
+    await new Promise((r) => setTimeout(r, 250));
+  }
+}
+
 // ------------------------------------------------------------------ handlers
 cliente.once("ready", async () => {
   console.log(`R34pete conectado como ${cliente.user.tag}`);
@@ -137,6 +224,9 @@ cliente.on("interactionCreate", async (interaccion) => {
   try {
     if (interaccion.commandName === "buscar") return await cmdBuscar(interaccion);
     if (interaccion.commandName === "feed") return await cmdFeed(interaccion);
+    if (interaccion.commandName === "instrucciones") return await cmdInstrucciones(interaccion);
+    if (interaccion.commandName === "ia") return await cmdIa(interaccion);
+    if (interaccion.commandName === "olvidar") return await cmdOlvidar(interaccion);
     if (interaccion.commandName === "estado") return await cmdEstado(interaccion);
     if (interaccion.commandName === "ayuda") return await cmdAyuda(interaccion);
   } catch (e) {
@@ -326,6 +416,32 @@ async function cmdFeed(interaccion) {
   }
 }
 
+async function cmdInstrucciones(interaccion) {
+  const texto = cliente.instrucciones.actual();
+  await respuestaEphemeral(interaccion, {
+    content: `**Instrucciones actuales** (de \`${cfg.chat.instrucciones}\`):\n\n${texto}`,
+  });
+}
+
+async function cmdIa(interaccion) {
+  const emb = new EmbedBuilder()
+    .setColor(0x9b30ff)
+    .setTitle("IA del chat")
+    .addFields(
+      { name: "Backends (en orden)", value: (cliente.iaCfg.orden || []).join(", ") || "-", inline: true },
+      { name: "Chat en DM", value: cfg.chat.habilitado ? cfg.chat.en_dm : "desactivado", inline: true },
+      { name: "En canales", value: cfg.chat.en_canales, inline: true },
+      { name: "Disparador", value: cfg.chat.disparador || "!" },
+      { name: "Memoria", value: `${cfg.chat.maximo_historial} mensajes por usuario` }
+    );
+  await respuestaEphemeral(interaccion, { embeds: [emb] });
+}
+
+async function cmdOlvidar(interaccion) {
+  const n = cliente.historial.olvidar(interaccion.user.id);
+  await respuestaEphemeral(interaccion, `Memoria borrada (${n} mensajes).`);
+}
+
 async function cmdEstado(interaccion) {
   const embed = new EmbedBuilder()
     .setColor(0x9b30ff)
@@ -376,7 +492,11 @@ process.on("SIGTERM", () => {
   process.exit(0);
 });
 
-cliente.login(cfg.token).catch((e) => {
-  console.error(`No se pudo iniciar sesión en Discord: ${e.message}`);
-  process.exit(1);
-});
+if (require.main === module) {
+  cliente.login(cfg.token).catch((e) => {
+    console.error(`No se pudo iniciar sesión en Discord: ${e.message}`);
+    process.exit(1);
+  });
+}
+
+module.exports = { cliente, manejarChat, cfg };

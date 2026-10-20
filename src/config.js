@@ -39,6 +39,31 @@ const POR_DEFECTO = {
     // Limite de subida de Discord (25 MB por defecto; 50 MB con boost).
     maxUploadMb: 25,
   },
+  // Chat automatico por DM (y en canales si le mencionan).
+  chat: {
+    habilitado: true,
+    en_dm: "siempre", // siempre | nunca
+    en_canales: "mencion", // mencion | siempre | nunca
+    disparador: "!",
+    cooldown_s: 5,
+    maximo_historial: 12,
+    instrucciones: "/etc/r34pete/instrucciones.md",
+    // Responder tambien a mensajes de otros bots (solo para pruebas).
+    responder_a_bots: false,
+  },
+  // IA: se prueban los backends en orden hasta que uno responda.
+  ia: {
+    orden: ["ollama", "pollinations"],
+    ollama_url: "http://127.0.0.1:11434",
+    ollama_modelo: "superyuki-ia:latest",
+    pollinations_modelo: "openai-fast",
+    gemini_modelo: "gemini-2.5-flash",
+    groq_modelo: "llama-3.3-70b-versatile",
+    openrouter_modelo: "meta-llama/llama-3.3-70b-instruct:free",
+    temperatura: 0.85,
+    max_tokens: 400,
+    claves: {}, // gemini, groq, openrouter, pollinations
+  },
   feeds: [],
   // Fichero propio (escribible por el bot) donde se guardan los feeds
   // creados con /feed. La configuración con el token no se toca nunca.

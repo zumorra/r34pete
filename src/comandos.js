@@ -88,6 +88,15 @@ const COMANDOS = [
         .addStringOption((o) => o.setName("id").setDescription("Id del feed.").setRequired(true))
     ),
 
+  new SlashCommandBuilder()
+    .setName("instrucciones")
+    .setDescription("Muestra las instrucciones que sigue el bot para responder."),
+  new SlashCommandBuilder()
+    .setName("ia")
+    .setDescription("Estado de la IA que responde por privado."),
+  new SlashCommandBuilder()
+    .setName("olvidar")
+    .setDescription("Borra la memoria de conversacion de este chat."),
   new SlashCommandBuilder().setName("estado").setDescription("Resumen del bot."),
   new SlashCommandBuilder().setName("ayuda").setDescription("Como se usa el bot."),
 ];
