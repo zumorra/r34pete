@@ -161,7 +161,15 @@ async function manejarChat(mensaje) {
   if (esDM) {
     if (cfg.chat.en_dm !== "siempre") return;
   } else {
-    if (cfg.chat.en_canales === "nunca") return;
+    // Solo responde por privado, salvo que se configure lo contrario.
+    if (cfg.chat.en_canales === "nunca") {
+      if (menciona) {
+        await mensaje
+          .reply("Aqui solo hablo por privado: escribeme un mensaje directo y te contesto.")
+          .catch(() => {});
+      }
+      return;
+    }
     if (cfg.chat.en_canales === "mencion" && !menciona && !conDisparador) return;
   }
 

@@ -43,7 +43,7 @@ const POR_DEFECTO = {
   chat: {
     habilitado: true,
     en_dm: "siempre", // siempre | nunca
-    en_canales: "mencion", // mencion | siempre | nunca
+    en_canales: "nunca", // "nunca" = solo responde por DM (lo pedido)
     disparador: "!",
     cooldown_s: 5,
     maximo_historial: 12,

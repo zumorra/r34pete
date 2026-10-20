@@ -11,8 +11,9 @@ de Oracle Cloud.
 
 ## Chat automático con IA
 
-El bot **responde solo por privado** a quien le escriba, y en los canales del
-servidor solo si le mencionan o si usa el disparador (`!`).
+El bot **responde solo por privado** a quien le escriba. En los canales del
+servidor no responde: si lo mencionan, le recuerda que le escriban por
+mensaje directo (`chat.en_canales` = `nunca`).
 
 ### Las instrucciones se editan tú
 
