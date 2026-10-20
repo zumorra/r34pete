@@ -1,0 +1,26 @@
+[Unit]
+Description=R34pete — bot de Discord de contenido de adultos (busqueda por etiquetas + feed automatico)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=r34pete
+Group=r34pete
+WorkingDirectory=/opt/r34pete
+Environment=NODE_ENV=production
+Environment=R34PETE_CONFIG=/etc/r34pete/config.json
+ExecStart=/usr/bin/node /opt/r34pete/src/index.js
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=r34pete
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/etc/r34pete
+
+[Install]
+WantedBy=multi-user.target

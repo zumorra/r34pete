@@ -1,0 +1,19 @@
+{
+  "name": "r34pete",
+  "version": "1.0.0",
+  "description": "Bot de Discord para contenido de adultos: busca por etiquetas en tableros de imagenes y publica un feed automatico en canales con restriccion de edad.",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "register": "node src/register.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.16.3"
+  },
+  "license": "MIT",
+  "private": true
+}

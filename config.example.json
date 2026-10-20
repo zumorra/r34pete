@@ -1,0 +1,31 @@
+{
+  "token": "PEGA_AQUI_EL_TOKEN_DEL_BOT",
+  "guildId": "1540174644311756832",
+  "userAgent": "r34pete/1.0 (+https://github.com/zumorra/r34pete; contact: yuki)",
+  "providers": {
+    "rule34": {
+      "enabled": false,
+      "userId": "",
+      "apiKey": ""
+    },
+    "e621": {
+      "enabled": true
+    },
+    "danbooru": {
+      "enabled": true
+    },
+    "gelbooru": {
+      "enabled": false,
+      "userId": "",
+      "apiKey": ""
+    }
+  },
+  "guards": {
+    "requireNsfwChannel": true,
+    "ageRole": "",
+    "cooldownSeconds": 20,
+    "maxResults": 40
+  },
+  "feeds": [],
+  "logLevel": "info"
+}
