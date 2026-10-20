@@ -60,6 +60,12 @@ sudo nano /etc/r34pete/config.json     # "ia": { "claves": { "groq": "gsk_..." }
 sudo systemctl restart r34pete
 ```
 
+En la nube (GitHub Actions) las claves llegan por secretos y el workflow las
+ mete en `ia.claves`: `OPENROUTER_API_KEY`, `GEMINI_API_KEY` y `GROQ_API_KEY`.
+El orden ahí es `openrouter → pollinations → gemini → groq`: primero el router
+`openrouter/free` (que nunca cae a un modelo de pago) y, si su clave falla o se
+queda sin cuota, el resto de gratuitos.
+
 ### Comandos del chat
 
 | Comando | Qué hace |
@@ -125,10 +131,13 @@ falta tarjeta ni cuenta de nube. Workflow en `.github/workflows/r34pete.yml`:
 
 - `schedule` cada 5 h y `workflow_dispatch` para arrancarlo a mano.
 - Cada sesión dura hasta 5 h 20 min (límite de Actions: 6 h) y el cron la releva.
-- Secretos (`DISCORD_TOKEN`, `RULE34_API_KEY`, `RULE34_USER_ID`) en
-  *Settings → Secrets*, nunca en el repo.
+- Secretos (`DISCORD_TOKEN`, `RULE34_API_KEY`, `RULE34_USER_ID` y
+  `OPENROUTER_API_KEY`) en *Settings → Secrets*, nunca en el repo.
 - El registro de "ya publicado" (`vistos.json`) se siembra desde el repo y se
   guarda de vuelta, así que no repite entre sesiones.
+- Al arrancar, un paso prueba el backend de OpenRouter con la clave de la
+  instancia y escribe en el log el modelo que sirvió de verdad
+  (`probar-ia-openrouter.js`).
 
 Puesta en marcha (una vez):
 
@@ -136,6 +145,7 @@ Puesta en marcha (una vez):
 gh secret set DISCORD_TOKEN  < token.txt
 gh secret set RULE34_API_KEY < clave.txt
 gh secret set RULE34_USER_ID < id.txt
+gh secret set OPENROUTER_API_KEY < clave_openrouter.txt
 gh repo edit --visibility public   # minutos ilimitados de Actions en repos publicos
 gh workflow run r34pete.yml
 ```

@@ -41,6 +41,9 @@ jobs:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
           RULE34_USER_ID: ${{ secrets.RULE34_USER_ID }}
           RULE34_API_KEY: ${{ secrets.RULE34_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         run: |
           mkdir -p .r34pete
           cp config.github.json .r34pete/config.json
@@ -55,6 +58,11 @@ jobs:
             cfg.providers.rule34.userId = process.env.RULE34_USER_ID || cfg.providers.rule34.userId;
             cfg.providers.rule34.apiKey = process.env.RULE34_API_KEY || "";
             cfg.providers.rule34.enabled = Boolean(cfg.providers.rule34.apiKey);
+            cfg.ia = cfg.ia || {};
+            cfg.ia.claves = cfg.ia.claves || {};
+            cfg.ia.claves.openrouter = process.env.OPENROUTER_API_KEY || cfg.ia.claves.openrouter || "";
+            cfg.ia.claves.gemini = process.env.GEMINI_API_KEY || cfg.ia.claves.gemini || "";
+            cfg.ia.claves.groq = process.env.GROQ_API_KEY || cfg.ia.claves.groq || "";
             fs.writeFileSync(p, JSON.stringify(cfg, null, 2));
           '
           chmod 600 .r34pete/config.json
@@ -63,17 +71,28 @@ jobs:
           if [ -f vistos.json ]; then cp vistos.json .r34pete/vistos.json; fi
           echo "token: $([ -n "$DISCORD_TOKEN" ] && echo puesto || echo FALTA)"
           echo "rule34: $([ -n "$RULE34_API_KEY" ] && echo con clave || echo sin clave)"
+          echo "openrouter: $([ -n "$OPENROUTER_API_KEY" ] && echo con clave || echo SIN clave)"
+          echo "modelo openrouter: $(node -e 'console.log(JSON.parse(require("fs").readFileSync(".r34pete/config.json","utf8")).ia.openrouter_modelo)')"
+
+      # Comprobacion real del backend de IA: llama a OpenRouter con la clave de
+      # la instancia y escribe en el log el modelo que sirvio de verdad.
+      - name: Probar el backend openrouter
+        env:
+          R34PETE_CONFIG: .r34pete/config.json
+        run: |
+          node probar-ia-openrouter.js || echo "aviso: el backend openrouter no respondio (el bot seguira con el siguiente)"
 
       - name: Hablar con Discord
         env:
           R34PETE_CONFIG: .r34pete/config.json
           R34PETE_INSTRUCCIONES: .r34pete/instrucciones.md
+          MINUTOS: ${{ inputs.minutos || '300' }}
         run: |
-          node src/index.js &
+          timeout --signal=TERM "$MINUTOS" node src/index.js &
           PID=$!
           trap "kill $PID" SIGTERM
           echo "bot arrancado (pid $PID), escuchando Discord..."
-          # El workflow termina solo al pasar el timeout-minutes; aqui se para.
+          # La sesion dura lo que diga el input "minutos" (300 por defecto).
           # Cada 10 min guarda el registro de vistos en el repo, para que la
           # proxima sesion no repita lo ya publicado.
           while kill -0 $PID 2>/dev/null; do

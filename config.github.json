@@ -25,13 +25,13 @@
     "responder_a_bots": false
   },
   "ia": {
-    "orden": ["pollinations", "gemini", "groq", "openrouter"],
+    "orden": ["openrouter", "pollinations", "gemini", "groq"],
     "ollama_url": "http://127.0.0.1:11434",
     "ollama_modelo": "superyuki-ia:latest",
     "pollinations_modelo": "openai-fast",
     "gemini_modelo": "gemini-2.5-flash",
     "groq_modelo": "llama-3.3-70b-versatile",
-    "openrouter_modelo": "meta-llama/llama-3.3-70b-instruct:free",
+    "openrouter_modelo": "openrouter/free",
     "temperatura": 0.85,
     "max_tokens": 400,
     "claves": {}
