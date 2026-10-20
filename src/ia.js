@@ -11,6 +11,12 @@
  * - gemini      online, gratis con clave (Google AI Studio).
  * - groq        online, gratis con clave (console.groq.com).
  * - openrouter  online, gratis con clave (modelos "free").
+ *
+ * Para openrouter, el modelo se puede poner de dos formas:
+ *   - "openrouter/free": el router de modelos gratuitos; nunca cae a uno de pago.
+ *   - "modelo-a:free,modelo-b:free": lista de respaldo; OpenRouter va al siguiente
+ *     si el primero falla por cuota, caida o moderacion (si se mezcla uno de pago,
+ *     ese se cobra: para no pagar, todos deben terminar en ":free").
  */
 
 const TIMEOUT_MS = 120000;
@@ -118,6 +124,12 @@ async function gemini(cfg, mensajes) {
 }
 
 // --------------------------------------------------------------- openai-like
+function cuerpoModelo(modelo) {
+  // "a,b,c" es una lista de respaldo de OpenRouter; un solo nombre va en "model".
+  const lista = String(modelo).split(",").map((s) => s.trim()).filter(Boolean);
+  return lista.length > 1 ? { models: lista } : { model: lista[0] ?? modelo };
+}
+
 async function compatible(cfg, mensajes, nombre, url, modelo) {
   const clave = cfg.claves && cfg.claves[nombre];
   if (!clave) throw new Error(`falta la clave de ${nombre}`);
@@ -131,8 +143,8 @@ async function compatible(cfg, mensajes, nombre, url, modelo) {
         : {}),
     },
     body: JSON.stringify({
-      model: modelo,
-      messages,
+      ...cuerpoModelo(modelo),
+      messages: mensajes,
       max_tokens: cfg.max_tokens ?? 400,
       temperature: cfg.temperatura ?? 0.85,
     }),
@@ -140,7 +152,8 @@ async function compatible(cfg, mensajes, nombre, url, modelo) {
   const datos = await r.json();
   const texto = (datos.choices && datos.choices[0] && datos.choices[0].message.content) || "";
   if (!texto.trim()) throw new Error(`${nombre} devolvio texto vacio`);
-  return { texto: texto.trim(), modelo };
+  // con lista de modelos, el que sirvio de verdad viene en la respuesta
+  return { texto: texto.trim(), modelo: datos.model || modelo };
 }
 
 const groq = (cfg, m) => compatible(cfg, m, "groq", "https://api.groq.com/openai/v1/chat/completions", cfg.groq_modelo);

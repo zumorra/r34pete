@@ -37,7 +37,20 @@ Se prueban en orden y, si uno falla, se pasa al siguiente:
 | `pollinations` | no | **Online y sin clave**: 1 respuesta cada 30 s por IP. |
 | `gemini` | sí | Google AI Studio, tier gratis. |
 | `groq` | sí | console.groq.com, tier gratis y muy rápido. |
-| `openrouter` | sí | modelos marcados como `free`. |
+| `openrouter` | sí | modelos gratuitos: `openrouter/free` (router que **sólo** cae entre gratuitos, nunca cobra de pago) o una lista de respaldo. |
+
+El modelo de OpenRouter se configura en `ia.openrouter_modelo` y admite dos formas:
+
+- `"openrouter/free"` — el router de modelos gratuitos: si uno se queda sin cuota o se
+  cae, salta a otro gratuito. **Nunca** cae a un modelo de pago.
+- `"modelo-a:free,modelo-b:free"` — lista de respaldo explícita: OpenRouter va al
+  siguiente si el primero falla por cuota, caída o moderación. Si se mezcla uno de
+  pago, **ese se cobra**: para no pagar, todos deben terminar en `:free`.
+
+> Ojo: los modelos `:free` de OpenRouter van y vienen (por ejemplo, el
+> `meta-llama/llama-3.3-70b-instruct:free` que había en 2026 ya no existe). El router
+> `openrouter/free` sobrevive a eso; un nombre fijo, no. Para ver lo que hay ahora:
+> `curl -s https://openrouter.ai/api/v1/models | grep -o '"id":"[^"]*:free"'`.
 
 Las claves se guardan en `/etc/r34pete/config.json` (`ia.claves`), con
 permisos `640`. Para añadir una:

@@ -59,7 +59,7 @@ const POR_DEFECTO = {
     pollinations_modelo: "openai-fast",
     gemini_modelo: "gemini-2.5-flash",
     groq_modelo: "llama-3.3-70b-versatile",
-    openrouter_modelo: "meta-llama/llama-3.3-70b-instruct:free",
+    openrouter_modelo: "openrouter/free",
     temperatura: 0.85,
     max_tokens: 400,
     claves: {}, // gemini, groq, openrouter, pollinations
