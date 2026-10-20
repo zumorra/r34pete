@@ -100,6 +100,32 @@ si no cabe ninguno, usa la versión pequeña que da el tablero.
 5. Los tableros se piden con un User-Agent propio y con espera entre
    peticiones, como piden sus reglas de uso.
 
+## Hosting: todo online
+
+El bot **no debe correr en tu PC**: en la nube, con la IA también online.
+
+| Opción | Coste | Sirve 24/7 | Notas |
+|---|---|---|---|
+| **Oracle Cloud Always Free** | gratis | sí | 2 micro x86 (1 GB) o 1 A1 ARM (2 OCPU/12 GB). Pide tarjeta **una vez** para verificar la cuenta; luego no cobra nada. El A1 suele salir *Out of capacity*: prueba otra región o la micro. |
+| Railway | 5 $/mes | sí | Trial de 5 $ al registrarte (un mes gratis) y luego plan Hobby. |
+| Koyeb | gratis | **no** | El plan gratis da 5 h/mes: no sirve para un bot. |
+
+### Oracle en 4 pasos
+
+1. `cloud.oracle.com/free` → *Start for free* (tarjeta para verificar).
+2. **Create instance** → shape `VM.Standard.A1.Flex` (2 OCPU, 12 GB) o
+   `VM.Standard.E2.1.Micro` (1 GB) → imagen Ubuntu 22.04/24.04.
+3. Red: VCN por defecto, subred pública, **ingress 22/tcp** (SSH) y sube tu
+   clave pública (`~/.ssh/r34pete_oci.pub`).
+4. *Advanced options → Cloud-init script*: pega `cloud-init.sh` (prepara Node,
+   el usuario y el servicio).
+
+Y luego, desde la master:
+
+```bash
+bash ~/superyuki-arreglos/r34pete/desplegar-remoto.sh <IP_PUBLICA> ubuntu ~/.ssh/r34pete_oci
+```
+
 ## Instalación
 
 ### En cualquier Linux (Ubuntu / Oracle Linux)
