@@ -77,6 +77,27 @@ queda sin cuota, el resto de gratuitos.
 En memoria recuerda los últimos 12 mensajes por usuario (`chat.maximo_historial`),
 así que el chat mantiene el contexto.
 
+### IAs con acceso gratuito (todas sin tarjeta)
+
+| Proveedor | Clave | Modelo por defecto | Para qué |
+|---|---|---|---|
+| **pollinations** | no (o clave *pollen*) | `openai-fast` (GPT-OSS 20B) | **La única sin cuenta.** 1 respuesta cada 30 s por IP; con clave pollen el límite sube. |
+| **groq** | sí (gratis) | `llama-3.3-70b-versatile` | Muy rápida y sin censura. Registro en console.groq.com. |
+| **cerebras** | sí (gratis) | `llama-3.3-70b` | Muy rápida. cloud.cerebras.ai. |
+| **nvidia** | sí (gratis) | `nvidia/llama-3.1-nemotron-70b-instruct` | build.nvidia.com (NVIDIA NIM). |
+| **openrouter** | sí (gratis) | `openrouter/free` | Router de modelos gratuitos; 50/día sin créditos. También acepta lista de respaldo `a:free,b:free`. |
+| **horde** | sí (gratis) | `meta-llama/Meta-Llama-3.3-70B-Instruct` | Comunidad voluntaria, sin censura. Hay que registrarse en stablehorde.net. |
+| **cloudflare** | sí (gratis) | `@cf/meta/llama-3.3-70b-instruct-fp8-fast` | Workers AI: 10.000 neuronas/día. Necesita la clave **y** el id de cuenta. |
+| **mistral** | sí (gratis) | `mistral-small-latest` | console.mistral.ai. |
+| **gemini** | sí (gratis) | `gemini-2.5-flash` | AI Studio. **Corta el contenido de adultos**: sirve como plan B, no como el principal. |
+
+Para meter una clave (se pide oculta con `getpass`, se **comprueba contra la API**
+antes de guardarla y se crea el secreto de GitHub para la versión online):
+
+```bash
+sudo python3 ~/superyuki-arreglos/r34pete/herramientas/activar-ia.py groq
+```
+
 ## Palabras clave (mini-idioma)
 
 Escribes palabras sueltas y el bot las traduce a etiquetas y al tipo de

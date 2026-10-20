@@ -41,11 +41,17 @@ function quitarPensamientos(texto) {
   return texto.trim();
 }
 
+// User-Agent de navegador: algunas APIs (groq, cerebras) estan delante de
+// Cloudflare y rechazan las peticiones de Node con el error 1010.
+const USER_AGENT =
+  "Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0";
+
 async function pedir(url, opciones) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+  const cabeceras = { "User-Agent": USER_AGENT, Accept: "application/json", ...(opciones.headers || {}) };
   try {
-    const r = await fetch(url, { ...opciones, signal: ctrl.signal });
+    const r = await fetch(url, { ...opciones, headers: cabeceras, signal: ctrl.signal });
     if (!r.ok) {
       const cuerpo = await r.text().catch(() => "");
       throw new Error(`HTTP ${r.status}: ${cuerpo.slice(0, 160)}`);

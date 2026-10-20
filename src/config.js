@@ -60,6 +60,11 @@ const POR_DEFECTO = {
     gemini_modelo: "gemini-2.5-flash",
     groq_modelo: "llama-3.3-70b-versatile",
     openrouter_modelo: "openrouter/free",
+    cerebras_modelo: "llama-3.3-70b",
+    nvidia_modelo: "nvidia/llama-3.1-nemotron-70b-instruct",
+    mistral_modelo: "mistral-small-latest",
+    cloudflare_modelo: "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+    horde_modelo: "meta-llama/Meta-Llama-3.3-70B-Instruct",
     temperatura: 0.85,
     max_tokens: 400,
     claves: {}, // gemini, groq, openrouter, pollinations
