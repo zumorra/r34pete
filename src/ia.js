@@ -11,6 +11,11 @@
  * - gemini      online, gratis con clave (Google AI Studio).
  * - groq        online, gratis con clave (console.groq.com).
  * - openrouter  online, gratis con clave (modelos "free").
+ * - cerebras    online, gratis con clave (Cerebras Cloud).
+ * - nvidia      online, gratis con clave (integrate.api.nvidia.com).
+ * - mistral     online, gratis con clave (La Plateforme).
+ * - cloudflare  online, gratis con clave (Workers AI: 10.000 neuronas/dia).
+ * - horde       online, gratis con clave (AI Horde, comunidad voluntaria).
  *
  * Para openrouter, el modelo se puede poner de dos formas:
  *   - "openrouter/free": el router de modelos gratuitos; nunca cae a uno de pago.
@@ -160,7 +165,77 @@ const groq = (cfg, m) => compatible(cfg, m, "groq", "https://api.groq.com/openai
 const openrouter = (cfg, m) =>
   compatible(cfg, m, "openrouter", "https://openrouter.ai/api/v1/chat/completions", cfg.openrouter_modelo);
 
-const BACKENDS = { ollama, pollinations, gemini, groq, openrouter };
+// ------------------------------------------------------- cerebras / nvidia / mistral
+// Todos son compatibles con la API de OpenAI: mismo cuerpo, distinto host.
+const cerebras = (cfg, m) =>
+  compatible(cfg, m, "cerebras", "https://api.cerebras.ai/v1/chat/completions", cfg.cerebras_modelo);
+const nvidia = (cfg, m) =>
+  compatible(cfg, m, "nvidia", "https://integrate.api.nvidia.com/v1/chat/completions", cfg.nvidia_modelo);
+const mistral = (cfg, m) =>
+  compatible(cfg, m, "mistral", "https://api.mistral.ai/v1/chat/completions", cfg.mistral_modelo);
+
+// --------------------------------------------------------- cloudflare workers ai
+// Necesita la clave de la API y el id de cuenta (los dos van en ia.claves).
+async function cloudflare(cfg, mensajes) {
+  const token = cfg.claves && cfg.claves.cloudflare;
+  const cuenta = cfg.claves && cfg.claves.cloudflare_account;
+  if (!token || !cuenta) throw new Error("faltan la clave o el id de cuenta de cloudflare");
+  const modelo = cfg.cloudflare_modelo || "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
+  const r = await pedir(
+    `https://api.cloudflare.com/client/v4/accounts/${cuenta}/ai/run/${encodeURIComponent(modelo)}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ messages: mensajes, max_tokens: cfg.max_tokens ?? 400 }),
+    }
+  );
+  const datos = await r.json();
+  const texto =
+    (datos.result && datos.result.response) || datos.response || (datos.result && datos.result.text) || "";
+  if (!texto.trim()) throw new Error("cloudflare devolvio texto vacio");
+  return { texto: texto.trim(), modelo };
+}
+
+// ------------------------------------------------------------------ ai horde
+// Comunidad de自愿: clave gratuita (hay que registrarse en stablehorde.net).
+async function horde(cfg, mensajes) {
+  const clave = cfg.claves && cfg.claves.horde;
+  if (!clave) throw new Error("falta la clave de horde");
+  const prompt = mensajes
+    .map((m) => (m.role === "system" ? m.content : `${m.role}: ${m.content}`))
+    .join("\n\n");
+  const r = await pedir("https://stablehorde.net/api/v2/generate/async", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", apikey: clave },
+    body: JSON.stringify({
+      apikey: clave,
+      prompt,
+      params: { max_length: cfg.max_tokens ?? 400, temperature: cfg.temperatura ?? 0.85 },
+      models: [cfg.horde_modelo || "meta-llama/Meta-Llama-3.3-70B-Instruct"],
+      trusted_workers: false,
+      slow_workers: true,
+    }),
+  });
+  const id = (await r.json()).id;
+  if (!id) throw new Error("horde no devolvio id de generacion");
+  const modelo = cfg.horde_modelo || "meta-llama/Meta-Llama-3.3-70B-Instruct";
+  for (let i = 0; i < 30; i++) {
+    await new Promise((s) => setTimeout(s, 2000));
+    const c = await pedir(`https://stablehorde.net/api/v2/generate/check/${id}`, {
+      headers: { apikey: clave },
+    });
+    const d = await c.json();
+    if (d.finished) {
+      const texto = (d.generations || []).map((g) => g.text).join(" ").trim();
+      if (texto) return { texto, modelo };
+      break;
+    }
+    if (d.kudos && d.kudos > 0) throw new Error("horde: generacion cancelada");
+  }
+  throw new Error("horde: se agoto el tiempo de espera");
+}
+
+const BACKENDS = { ollama, pollinations, gemini, groq, openrouter, cerebras, nvidia, mistral, cloudflare, horde };
 
 /**
  * Responde con el primer backend que funcione.

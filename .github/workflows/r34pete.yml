@@ -88,7 +88,7 @@ jobs:
           R34PETE_INSTRUCCIONES: .r34pete/instrucciones.md
           MINUTOS: ${{ inputs.minutos || '300' }}
         run: |
-          timeout --signal=TERM "$MINUTOS" node src/index.js &
+          timeout --signal=TERM "${MINUTOS}m" node src/index.js &
           PID=$!
           trap "kill $PID" SIGTERM
           echo "bot arrancado (pid $PID), escuchando Discord..."
