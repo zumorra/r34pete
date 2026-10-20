@@ -38,6 +38,8 @@ const cliente = new Client({
 });
 cliente.cfg = cfg;
 cliente.feeds = new GestorFeeds(cliente);
+// Registro de lo ya publicado, en disco: evita repetir entre reinicios.
+cliente.vistos = new Vistos(cfg.vistosFile);
 
 const COOLDOWNS = new Map();
 

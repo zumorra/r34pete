@@ -75,7 +75,6 @@ class Feed {
 
     const limite = this.etiquetasPermitidas ? this.etiquetasPermitidas.length : 40;
     const vistos = this.cliente.vistos;
-
     // Se recorren varias paginas hasta encontrar algo que no se haya
     // publicado antes. El registro de vistos vive en disco, asi que el
     // bot no repite lo que ya posteo en una sesion anterior.
@@ -93,10 +92,10 @@ class Feed {
       );
       if (!resultados.length) continue;
       probadas++;
-      const nuevos = vistos.sinVer(this.proveedor, resultados, this.id);
+      const nuevos = vistos ? vistos.sinVer(this.proveedor, resultados, this.id) : [];
       const bolsa = nuevos.length ? nuevos : resultados;
       elegido = bolsa[Math.floor(Math.random() * bolsa.length)];
-      vistos.marcar(this.proveedor, [elegido.id], this.id);
+      if (vistos) vistos.marcar(this.proveedor, [elegido.id], this.id);
     }
     if (!elegido) {
       console.warn(`[feed ${this.id}] no hay resultados en las paginas probadas`);
