@@ -64,7 +64,7 @@ const POR_DEFECTO = {
     nvidia_modelo: "nvidia/llama-3.1-nemotron-70b-instruct",
     mistral_modelo: "mistral-small-latest",
     cloudflare_modelo: "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
-    horde_modelo: "meta-llama/Meta-Llama-3.3-70B-Instruct",,
+    horde_modelo: "meta-llama/Meta-Llama-3.3-70B-Instruct",
     xai_modelo: "grok-4",
     temperatura: 0.85,
     max_tokens: 400,
