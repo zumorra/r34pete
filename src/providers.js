@@ -117,23 +117,27 @@ async function rule34(cfg, tags, limit, medio) {
     },
     cfg.userAgent
   );
-  if (datos.success === false || !Array.isArray(datos.posts)) {
+  if (datos && datos.success === false) {
     throw new ErrorProveedor(datos.message || "rule34 no devolvió resultados", "rule34");
   }
-  return datos.posts
+  // rule34 devuelve un ARRAY plano de posts (no {"posts": [...]}).
+  const lista = Array.isArray(datos) ? datos : Array.isArray(datos.posts) ? datos.posts : [];
+  return lista
     .map((post) => {
       const url = post.file_url || post.sample_url || "";
       const etiquetas = Array.isArray(post.tags) ? post.tags.join(" ") : String(post.tags || "");
+      const hayMuestra = post.sample === true && post.sample_url;
       return {
         id: String(post.id ?? ""),
         url,
-        muestra: post.sample_url || "",
+        muestra: hayMuestra ? post.sample_url : "",
         tags: etiquetas,
         source: "rule34",
-        pageUrl: post.post_url ? `https://rule34.xxx/post/${post.id}` : "",
-        author: post.creator_name || "",
+        pageUrl: post.id ? `https://rule34.xxx/post/${post.id}` : "",
+        author: post.owner || "",
+        rating: post.rating || "",
         ext: extensionDe(url),
-        size: post.file_size || 0,
+        size: 0, // rule34 no informa del tamaño: se comprueba al descargar
         tipo: tipoDe(url),
       };
     })
@@ -173,6 +177,7 @@ async function e621(cfg, tags, limit, medio) {
         source: "e621",
         pageUrl: post.id ? `https://e621.net/posts/${post.id}` : "",
         author: artista,
+        rating: post.rating || "",
         ext: (archivo.ext || extensionDe(url) || "").toLowerCase(),
         size: archivo.size || 0,
         tipo: tipoDe(url, archivo.ext),
@@ -202,6 +207,7 @@ async function danbooru(cfg, tags, limit, medio) {
         source: "danbooru",
         pageUrl: post.id ? `https://danbooru.donmai.us/posts/${post.id}` : "",
         author: post.artist_name || "",
+        rating: post.rating || "",
         ext: (asset.file_ext || extensionDe(url) || "").toLowerCase(),
         size: asset.file_size || 0,
         tipo: tipoDe(url, asset.file_ext),
@@ -294,10 +300,36 @@ async function descargar(url, userAgent) {
   return { buffer, tipo: r.headers.get("content-type") || "" };
 }
 
+/**
+ * Descarga el primero de los candidatos que quepa en el límite de subida de
+ * Discord. Si el original no cabe, prueba con la versión pequeña del tablero
+ * y, si tampoco, pasa al siguiente candidato.
+ * @returns {Promise<{post: object, buffer: Buffer}|null>}
+ */
+async function descargarApto(candidatos, maxMb, userAgent) {
+  const limite = maxMb * 1024 * 1024;
+  for (const post of candidatos) {
+    const urls = [];
+    if (!(post.size && post.size > limite) && post.url) urls.push(post.url);
+    if (post.muestra) urls.push(post.muestra);
+    if (!urls.length && post.url) urls.push(post.url);
+    for (const url of urls) {
+      try {
+        const { buffer } = await descargar(url, userAgent);
+        if (buffer.length <= limite) return { post, buffer };
+      } catch (e) {
+        /* siguiente candidato */
+      }
+    }
+  }
+  return null;
+}
+
 module.exports = {
   buscar,
   disponibles,
   descargar,
+  descargarApto,
   ErrorProveedor,
   PROVEEDORES,
   extensionDe,

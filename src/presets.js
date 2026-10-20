@@ -16,8 +16,9 @@
  */
 
 const PALABRAS = {
-  // anthro / furry
-  furry: { tags: ["anthro"] },
+  // anthro / furry: en e621 no existe "furry" (lo anthro es "anthro"); en
+  // rule34 sí existe "furry", así que allí se usa tal cual.
+  furry: { tags: ["furry"], e621: { tags: ["anthro"] } },
   anthro: { tags: ["anthro"] },
   anthropo: { tags: ["anthro"] },
   antropomorfo: { tags: ["anthro"] },
@@ -52,9 +53,11 @@ const PALABRAS = {
  * Interpreta lo que el usuario ha escrito.
  * @param {string} entrada texto libre ("furry videos")
  * @param {string|null} medioOpcion medio elegido en la opción del comando
+ * @param {string|null} proveedor tablero: cambia según el tablero (e621 no
+ *        tiene etiqueta "furry", rule34 sí)
  * @returns {{tags: string, medio: string, traducciones: string[]}}
  */
-function interpretar(entrada, medioOpcion = null) {
+function interpretar(entrada, medioOpcion = null, proveedor = null) {
   const palabras = String(entrada || "")
     .replace(/[,\n]+/g, " ")
     .replace(/\s+/g, " ")
@@ -67,7 +70,9 @@ function interpretar(entrada, medioOpcion = null) {
   let medio = null; // el que gana es el que viene en el texto
 
   for (const palabra of palabras) {
-    const def = PALABRAS[palabra.toLowerCase()];
+    const base = PALABRAS[palabra.toLowerCase()];
+    const def =
+      base && proveedor && base[proveedor] ? { ...base, ...base[proveedor] } : base;
     if (def) {
       if (def.tags) {
         tags.push(...def.tags);

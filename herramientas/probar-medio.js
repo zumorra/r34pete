@@ -5,9 +5,9 @@
  * que el bot (tablero → descarga → subida a Discord). Sirve para comprobar
  * que los tres medios funcionan de verdad.
  *
- *   node herramientas/probar-medio.js <canalId> <palabra> [palabra…]
+ *   node herramientas/probar-medio.js <canalId> <palabra> [palabra…] [fuente]
  *   node herramientas/probar-medio.js 1562158527164850274 furry
- *   node herramientas/probar-medio.js 1562158527164850274 furry videos
+ *   node herramientas/probar-medio.js 1562158527164850274 furry videos rule34
  */
 
 const { Client, GatewayIntentBits, EmbedBuilder } = require("discord.js");
@@ -16,15 +16,19 @@ const presets = require("../src/presets");
 const { cargar } = require("../src/config");
 
 const canalId = process.argv[2];
-const entrada = process.argv.slice(3).join(" ");
+const args = process.argv.slice(3);
+const fuente = args.includes("rule34") || args.includes("e621") || args.includes("danbooru")
+  ? args.pop()
+  : "e621";
+const entrada = args.join(" ");
 if (!canalId || !entrada) {
-  console.error("uso: node herramientas/probar-medio.js <canalId> <palabras>");
+  console.error("uso: node herramientas/probar-medio.js <canalId> <palabras> [fuente]");
   process.exit(2);
 }
 
 const cfg = cargar();
-const { tags, medio } = presets.interpretar(entrada, null);
-console.log(`buscando '${entrada}' -> tags=[${tags}] medio=${medio}`);
+const { tags, medio } = presets.interpretar(entrada, null, fuente);
+console.log(`buscando '${entrada}' en ${fuente} -> tags=[${tags}] medio=${medio}`);
 
 (async () => {
   const cliente = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -32,17 +36,20 @@ console.log(`buscando '${entrada}' -> tags=[${tags}] medio=${medio}`);
   const canal = await cliente.channels.fetch(canalId);
   if (!canal) throw new Error(`No encuentro el canal ${canalId}`);
 
-  const resultados = await proveedores.buscar(cfg, "e621", tags, 25, medio);
+  const resultados = await proveedores.buscar(cfg, fuente, tags, 25, medio);
   console.log(`${resultados.length} resultados`);
   if (!resultados.length) throw new Error("sin resultados");
 
   const limite = (cfg.guards.maxUploadMb || 25) * 1024 * 1024;
   const caben = resultados.filter((r) => !r.size || r.size <= limite);
-  const elegido = (caben.length ? caben : resultados)[0];
-  const url = elegido.size > limite && elegido.muestra ? elegido.muestra : elegido.url;
+  const { post: elegido, buffer } = await proveedores.descargarApto(
+    caben.length ? caben : resultados,
+    limite / (1024 * 1024),
+    cfg.userAgent
+  );
+  if (!elegido) throw new Error("ninguno cabe en el limite de subida");
   console.log(`elegido: id ${elegido.id} ${elegido.ext} ${Math.round((elegido.size||0)/1024)}KB`);
 
-  const { buffer } = await proveedores.descargar(url, cfg.userAgent);
   const validas = ["jpg", "jpeg", "png", "webp", "gif", "webm", "mp4"];
   const ext = validas.includes((elegido.ext || "").toLowerCase())
     ? elegido.ext.toLowerCase()

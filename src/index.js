@@ -40,22 +40,14 @@ cliente.feeds = new GestorFeeds(cliente);
 
 const COOLDOWNS = new Map();
 
-/** Elige un resultado que quepa en el límite de subida de Discord. */
-function elegirPdescargable(resultados, maxMb) {
-  const limite = maxMb * 1024 * 1024;
-  const caben = resultados.filter((r) => !r.size || r.size <= limite);
-  if (caben.length) return caben[Math.floor(Math.random() * caben.length)];
-  // Ninguno cabe: se usa la version pequeña (muestra) si el tablero la tiene.
-  const conMuestra = resultados.filter((r) => r.muestra);
-  if (conMuestra.length) return conMuestra[Math.floor(Math.random() * conMuestra.length)];
-  return null;
-}
-
-/** URL a descargar: la original, o la muestra si la original no cabe. */
-function urlDeDescarga(post, maxMb) {
-  const limite = maxMb * 1024 * 1024;
-  if (post.size && post.size > limite && post.muestra) return post.muestra;
-  return post.url;
+/** Mezcla una lista (para no repetir siempre el mismo resultado). */
+function barajar(lista) {
+  const copia = [...lista];
+  for (let i = copia.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copia[i], copia[j]] = [copia[j], copia[i]];
+  }
+  return copia;
 }
 
 /** Nombre del adjunto con la extensión correcta (Discord la usa para el vídeo). */
@@ -161,7 +153,7 @@ async function cmdBuscar(interaccion) {
   const fuente = interaccion.options.getString("fuente") || "e621";
   const entrada = interaccion.options.getString("tags");
   const medioOpcion = interaccion.options.getString("medio");
-  const { tags, medio, traducciones } = presets.interpretar(entrada, medioOpcion);
+  const { tags, medio, traducciones } = presets.interpretar(entrada, medioOpcion, fuente);
   try {
     guard.revisarTexto(entrada);
     guard.revisarTags(tags);
@@ -201,36 +193,38 @@ async function cmdBuscar(interaccion) {
         `No encontre nada **${medio}** con \`${tags}\` en ${fuente}.`
       );
     }
-    const elegido = elegirPdescargable(resultados, cfg.guards.maxUploadMb || 25);
-    if (!elegido) {
-      return await interaccion.editReply(
-        `Hay ${resultados.length} resultados, pero todos pasan del límite de ` +
-          `${cfg.guards.maxUploadMb || 25} MB que acepta Discord.`
-      );
-    }
-    const { buffer } = await proveedores.descargar(
-      urlDeDescarga(elegido, cfg.guards.maxUploadMb || 25),
+    const descargado = await proveedores.descargarApto(
+      barajar(resultados),
+      cfg.guards.maxUploadMb || 25,
       cfg.userAgent
     );
+    if (!descargado) {
+      return await interaccion.editReply(
+        "No encontré ninguno que quepa en el límite de subida de Discord."
+      );
+    }
+    const post = descargado.post;
+    const buffer = descargado.buffer;
     const embed = new EmbedBuilder()
       .setColor(0x9b30ff)
       .setTitle("Resultado")
       .addFields(
-        { name: "Tablero", value: elegido.source, inline: true },
-        { name: "id", value: elegido.id || "-", inline: true },
-        { name: "Medio", value: elegido.tipo || medio, inline: true }
+        { name: "Tablero", value: post.source, inline: true },
+        { name: "id", value: post.id || "-", inline: true },
+        { name: "Medio", value: post.tipo || medio, inline: true }
       );
-    if (elegido.tags) embed.addFields({ name: "Etiquetas", value: elegido.tags.slice(0, 1000) });
+    if (post.rating) embed.addFields({ name: "Rating", value: post.rating, inline: true });
+    if (post.tags) embed.addFields({ name: "Etiquetas", value: post.tags.slice(0, 1000) });
     if (traducciones.length) {
       embed.addFields({
         name: "Traducido",
         value: traducciones.join(" · ").slice(0, 500),
       });
     }
-    if (elegido.pageUrl) embed.setURL(elegido.pageUrl);
+    if (post.pageUrl) embed.setURL(post.pageUrl);
     await interaccion.editReply({
       embeds: [embed],
-      files: [{ attachment: buffer, name: nombreArchivo(elegido) }],
+      files: [{ attachment: buffer, name: nombreArchivo(post) }],
     });
   } catch (e) {
     console.error(e);

@@ -83,20 +83,28 @@ class Feed {
     );
     if (!resultados.length) return;
 
-    let elegido = null;
+    const candidatos = [];
     for (const p of resultados) {
-      if (!this.vistos.has(`${this.proveedor}:${p.id}`)) {
-        elegido = p;
-        break;
-      }
+      if (!this.vistos.has(`${this.proveedor}:${p.id}`)) candidatos.push(p);
     }
-    if (!elegido) elegido = resultados[0];
-    this.vistos.add(`${this.proveedor}:${elegido.id}`);
+    // primero los que no se han visto; si no hay, se repite uno
+    for (const p of resultados) {
+      if (!candidatos.includes(p)) candidatos.push(p);
+    }
+    this.vistos.add(`${this.proveedor}:${candidatos[0].id}`);
     if (this.vistos.size > 500) {
       this.vistos = new Set([...this.vistos].slice(-200));
     }
 
-    const { buffer } = await proveedores.descargar(elegido.url, this.cliente.cfg.userAgent);
+    const { post: elegido, buffer } = await proveedores.descargarApto(
+      candidatos,
+      this.cliente.cfg.guards.maxUploadMb || 25,
+      this.cliente.cfg.userAgent
+    );
+    if (!elegido) {
+      console.warn(`[feed ${this.id}] ninguno de los ${candidatos.length} resultados cabe en el limite`);
+      return;
+    }
     const embed = new EmbedBuilder()
       .setColor(0x9b30ff)
       .setTitle("Feed")

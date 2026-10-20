@@ -40,23 +40,6 @@ si no cabe ninguno, usa la versión pequeña que da el tablero.
 | danbooru | ninguna | Funciona; su contenido explícito está filtrado para cuentas anónimas; sus animaciones son `.gif`. |
 | gelbooru | user_id + api_key | Apagado por defecto. |
 
-## Activar rule34 (tablero con clave)
-
-```bash
-sudo python3 ~/superyuki-arreglos/r34pete/herramientas/activar-rule34.py
-```
-
-Pide el `user_id` (por defecto 6947812) y la `api_key` por terminal **sin
-mostrarla** (`getpass`: no se ve al escribir ni queda en el historial).
-Antes de guardar nada comprueba la clave contra la API; si no vale, se para
-y deja la configuración intacta. Si sale bien, la guarda, habilita el tablero,
-reinicia el servicio y lo dice.
-
-La `api_key` se saca de `https://rule34.xxx/index.php?page=account&s=options`
-en tu navegador normal (su web está detrás de un anti-bot que bloquea a los
-navegadores headless como el de OpenMausBot; el host `api.rule34.xxx` sólo
-sirve endpoints).
-
 ## Guardas (siempre activas)
 
 1. **Sólo canales con "Restricción de edad" activada.** Discord lo exige
