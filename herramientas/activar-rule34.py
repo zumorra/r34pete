@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 """Activa rule34 en la configuración de R34pete.
 
-Pide la api_key por terminal SIN mostrarla (getpass), la guarda junto al
-user_id, habilita el tablero, reinicia el servicio y prueba que funciona.
+La api_key se pide por terminal con getpass: NO se ve mientras la escribes,
+NO queda en el historial y NO pasa por el chat. Antes de guardar nada, la
+comprueba contra la API de rule34; si no vale, se para y no toca la config.
 
     sudo python3 herramientas/activar-rule34.py [user_id]
 
-La clave no pasa por el chat, ni queda en el historial de la terminal
-(getpass no la eco), ni se imprime en ningún log.
+Dónde se saca la clave:
+  1. En tu navegador normal, entra en rule34.xxx con tu cuenta.
+  2. Ve a https://rule34.xxx/index.php?page=account&s=options  (Ajustes de la cuenta).
+  3. Sección "API Keys": aparecen tu user_id y tu api_key. Si no hay clave,
+     pidela ahí mismo (solo se concede una por aplicación).
+  4. Copia la api_key y pégala cuando el script te la pida.
 """
 
 import getpass
@@ -24,6 +29,7 @@ UA = "r34pete/1.0 (+https://github.com/zumorra/r34pete; contact: yuki)"
 
 
 def probar(user_id, api_key, tags="furry"):
+    """Devuelve (ok, detalle). Consulta la API de verdad con la clave."""
     url = (
         "https://api.rule34.xxx/index.php?page=dapi&s=post&q=index&json=1"
         f"&tags={urllib.parse.quote(tags)}&limit=3"
@@ -35,18 +41,25 @@ def probar(user_id, api_key, tags="furry"):
             cuerpo = r.read().decode("utf-8", "replace")
     except Exception as e:  # noqa: BLE001
         return False, f"error de red: {e}"
-    if cuerpo.strip().startswith("{") or cuerpo.strip().startswith("["):
+    limpio = cuerpo.strip()
+    if limpio.startswith("{") or limpio.startswith("["):
         try:
-            datos = json.loads(cuerpo)
+            datos = json.loads(limpio)
             posts = datos.get("posts", []) if isinstance(datos, dict) else datos
             return True, f"OK: {len(posts)} resultados para '{tags}'"
         except json.JSONDecodeError:
             return False, "respuesta no es JSON válido"
-    return False, f"rechazado: {cuerpo.strip()[:120]}"
+    return False, f"rechazado: {limpio[:120]}"
 
 
 def main() -> int:
-    print("== Activando rule34 en R34pete ==")
+    print("=" * 62)
+    print(" Activando rule34 en R34pete")
+    print("=" * 62)
+    print("La api_key se pide ahora: no se ve al escribirla.")
+    print("(Si prefieres, copiala de https://rule34.xxx/index.php?page=account&s=options)")
+    print()
+
     datos = json.loads(RUTA.read_text())
     proveedores = datos.setdefault("providers", {})
     rule34 = proveedores.setdefault("rule34", {})
@@ -58,26 +71,29 @@ def main() -> int:
         return 1
 
     ok, detalle = probar(user_id, api_key)
-    print(f"prueba con la clave: {detalle}")
+    print(f"prueba con la clave -> {detalle}")
     if not ok:
-        print("La clave no es valida: revisa que la copies entera de la pagina de opciones.",
-              file=sys.stderr)
+        print(
+            "La clave no es valida. Copiala entera de la pagina de opciones y prueba otra vez.",
+            file=sys.stderr,
+        )
         return 2
 
     rule34["userId"] = user_id
     rule34["apiKey"] = api_key
     rule34["enabled"] = True
     RUTA.write_text(json.dumps(datos, indent=2, ensure_ascii=False) + "\n")
-    print(f"guardado en {RUTA} (permisos intactos)")
+    print(f"guardado en {RUTA}")
 
     print("reiniciando el servicio…")
     subprocess.run(["systemctl", "restart", "r34pete"], check=False)
     subprocess.run(["sleep", "6"], check=False)
     salida = subprocess.run(
-        ["journalctl", "-u", "r34pete", "--no-pager", "-n", "5"], capture_output=True, text=True
+        ["journalctl", "-u", "r34pete", "--no-pager", "-n", "6"], capture_output=True, text=True
     )
     print(salida.stdout.strip())
-    print("listo: rule34 activo. Ya puedes usar /buscar con fuente:rule34")
+    print()
+    print("rule34 activo. Ya puedes usar /buscar furry fuente:rule34")
     return 0
 
 
