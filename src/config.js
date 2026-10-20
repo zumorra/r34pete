@@ -44,6 +44,8 @@ const POR_DEFECTO = {
     habilitado: true,
     en_dm: "siempre", // siempre | nunca
     en_canales: "nunca", // "nunca" = solo responde por DM (lo pedido)
+    // Id de un canal concreto donde SI puede contestar (opcional).
+    canalPermitido: "",
     disparador: "!",
     cooldown_s: 5,
     maximo_historial: 12,

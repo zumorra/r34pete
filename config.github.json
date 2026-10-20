@@ -2,10 +2,22 @@
   "guildId": "1540174644311756832",
   "userAgent": "r34pete/1.0 (+https://github.com/zumorra/r34pete; contact: yuki)",
   "providers": {
-    "rule34": { "enabled": false, "userId": "", "apiKey": "" },
-    "e621": { "enabled": true },
-    "danbooru": { "enabled": true },
-    "gelbooru": { "enabled": false, "userId": "", "apiKey": "" }
+    "rule34": {
+      "enabled": false,
+      "userId": "",
+      "apiKey": ""
+    },
+    "e621": {
+      "enabled": true
+    },
+    "danbooru": {
+      "enabled": true
+    },
+    "gelbooru": {
+      "enabled": false,
+      "userId": "",
+      "apiKey": ""
+    }
   },
   "guards": {
     "requireNsfwChannel": true,
@@ -22,10 +34,16 @@
     "cooldown_s": 5,
     "maximo_historial": 12,
     "instrucciones": ".r34pete/instrucciones.md",
-    "responder_a_bots": false
+    "responder_a_bots": false,
+    "canalPermitido": ""
   },
   "ia": {
-    "orden": ["openrouter", "pollinations", "gemini", "groq"],
+    "orden": [
+      "openrouter",
+      "pollinations",
+      "gemini",
+      "groq"
+    ],
     "ollama_url": "http://127.0.0.1:11434",
     "ollama_modelo": "superyuki-ia:latest",
     "pollinations_modelo": "openai-fast",

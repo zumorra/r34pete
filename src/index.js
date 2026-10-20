@@ -151,26 +151,33 @@ async function manejarChat(mensaje) {
   if (cliente.user && mensaje.author.id === cliente.user.id) return;
   if (!mensaje.content || !mensaje.content.trim()) return;
 
+  // Privado (1 a 1), grupo de MDs o el canal que se haya autorizado.
   const esDM = mensaje.channel.type === ChannelType.DM;
+  const esGrupo = mensaje.channel.type === ChannelType.GroupDM;
   const idBot = cliente.user ? cliente.user.id : null;
   const menciona = idBot && mensaje.mentions.users.has(idBot);
   const disparador = cfg.chat.disparador || "!";
   const conDisparador =
     disparador && mensaje.content.trim().toLowerCase().startsWith(disparador.toLowerCase());
+  const canalAutorizado =
+    cfg.chat.canalPermitido && String(mensaje.channel.id) === String(cfg.chat.canalPermitido);
 
-  if (esDM) {
+  if (esDM || esGrupo) {
     if (cfg.chat.en_dm !== "siempre") return;
   } else {
-    // Solo responde por privado, salvo que se configure lo contrario.
-    if (cfg.chat.en_canales === "nunca") {
+    // En los canales solo contesta si ese canal esta autorizado.
+    if (canalAutorizado) {
+      // permitido: sigue
+    } else if (cfg.chat.en_canales === "nunca") {
       if (menciona) {
         await mensaje
           .reply("Aqui solo hablo por privado: escribeme un mensaje directo y te contesto.")
           .catch(() => {});
       }
       return;
+    } else if (cfg.chat.en_canales === "mencion" && !menciona && !conDisparador) {
+      return;
     }
-    if (cfg.chat.en_canales === "mencion" && !menciona && !conDisparador) return;
   }
 
   try {
