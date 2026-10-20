@@ -106,6 +106,7 @@ function cargar(ruta = RUTA_POR_DEFECTO) {
   if (process.env.RULE34_API_KEY) cfg.providers.rule34.apiKey = process.env.RULE34_API_KEY;
   if (process.env.R34PETE_FEEDS_FILE) cfg.feedsFile = process.env.R34PETE_FEEDS_FILE;
   if (process.env.R34PETE_VISTOS_FILE) cfg.vistosFile = process.env.R34PETE_VISTOS_FILE;
+  if (process.env.R34PETE_INSTRUCCIONES) cfg.chat.instrucciones = process.env.R34PETE_INSTRUCCIONES;
 
   if (!cfg.token) {
     throw new Error(

@@ -1,33 +1,38 @@
 #!/usr/bin/env bash
-# Despliega R34pete en CUALQUIER maquina Linux por SSH (Oracle Cloud, Hetzner,
-# cualquier VPS). Copia codigo, configuracion e instrucciones del chat,
-# instala el servicio systemd y comprueba que arranca.
+# Despliega R34pete en una instancia de Oracle Cloud desde la master.
 #
-#   bash desplegar-remoto.sh <IP> [usuario] [llave_ssh]
+#   bash desplegar-oci.sh <IP_PUBLICA> [usuario]      (usuario por defecto: ubuntu)
 #
-# Ejemplo (Oracle Always Free):
-#   bash desplegar-remoto.sh 130.61.23.45 ubuntu ~/.ssh/r34pete_oci
+# Copia el codigo, la configuracion (con el token y la api_key de rule34) y las
+# instrucciones del chat, instala el servicio y comprueba que arranca.
+# La llave es ~/.ssh/r34pete_oci (la publica se sube al crear la instancia).
+#
+# En la instancia la IA es SIEMPRE online: no se usa el Ollama de la master
+# (alli no llega). El orden por defecto es pollinations (sin clave) y, si se
+# anaden claves, gemini / groq / openrouter.
 set -euo pipefail
 
-IP="${1:?falta la IP del servidor}"
+IP="${1:?falta la IP publica de la instancia}"
 USUARIO="${2:-ubuntu}"
-KEY="${3:-${R34PETE_SSH_KEY:-$HOME/.ssh/r34pete_oci}}"
+KEY="${R34PETE_SSH_KEY:-$HOME/.ssh/r34pete_oci}"
 ORIGEN="${R34PETE_ORIGEN:-$HOME/superyuki-arreglos/r34pete}"
 CONF_LOCAL="${R34PETE_CONFIG:-/etc/r34pete/config.json}"
 INSTRUCCIONES="${R34PETE_INSTRUCCIONES:-/etc/r34pete/instrucciones.md}"
 
 [[ -f "$KEY" ]] || { echo "No encuentro la llave $KEY" >&2; exit 1; }
 [[ -f "$CONF_LOCAL" ]] || { echo "No encuentro la configuracion $CONF_LOCAL" >&2; exit 1; }
-grep -q "PEGA_AQUI_EL_TOKEN" "$CONF_LOCAL" && echo "AVISO: la configuracion tiene el token de ejemplo" >&2
+grep -q "PEGA_AQUI_EL_TOKEN" "$CONF_LOCAL" && {
+  echo "AVISO: la configuracion sigue con el token de ejemplo" >&2
+}
 
-echo "==> Conectando con $USUARIO@$IP"
-ssh -i "$KEY" -o StrictHostKeyChecking=accept-new -o ConnectTimeout=20 "$USUARIO@$IP" 'echo ok >/dev/null'
+echo "==> Comprobando la conexion con $USUARIO@$IP"
+ssh -i "$KEY" -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 "$USUARIO@$IP" 'echo ok' >/dev/null
 
-echo "==> Enviando codigo, configuracion e instrucciones"
+echo "==> Copiando codigo, configuracion e instrucciones"
 rsync -az -e "ssh -i $KEY" --exclude node_modules --exclude .git \
   "$ORIGEN/" "$USUARIO@$IP:/tmp/r34pete/"
 scp -i "$KEY" "$CONF_LOCAL" "$USUARIO@$IP:/tmp/config.json"
-[[ -f "$INSTRUCCIONES" ]] && scp -i "$KEY" "$INSTRUCCIONES" "$USUARIO@$IP:/tmp/instrucciones.md"
+[[ -f "$INSTRUCCIONES" ]] && scp -i "$KEY" "$INSTRUCCIONES" "$USUARIO@$IP:/tmp/instrucciones.md" || true
 
 echo "==> Instalando y arrancando"
 ssh -i "$KEY" "$USUARIO@$IP" '
@@ -40,11 +45,11 @@ ssh -i "$KEY" "$USUARIO@$IP" '
   sudo systemctl enable --now r34pete
   sleep 8
   echo "--- estado ---"
-  sudo systemctl --no-pager --lines=6 status r34pete || true
+  sudo systemctl --no-pager --lines=8 status r34pete || true
   echo "--- logs ---"
   sudo journalctl -u r34pete --no-pager -n 12 || true
 '
 echo
 echo "Listo. Deberia decir: R34pete conectado como R34pete#1680"
-echo "Para verlo en vivo:"
+echo "Para comprobarlo desde la master:"
 echo "  ssh -i $KEY $USUARIO@$IP 'sudo journalctl -u r34pete -f'"

@@ -1,0 +1,59 @@
+{
+  "guildId": "1540174644311756832",
+  "userAgent": "r34pete/1.0 (+https://github.com/zumorra/r34pete; contact: yuki)",
+  "providers": {
+    "rule34": { "enabled": false, "userId": "", "apiKey": "" },
+    "e621": { "enabled": true },
+    "danbooru": { "enabled": true },
+    "gelbooru": { "enabled": false, "userId": "", "apiKey": "" }
+  },
+  "guards": {
+    "requireNsfwChannel": true,
+    "ageRole": "",
+    "cooldownSeconds": 25,
+    "maxResults": 75,
+    "maxUploadMb": 25
+  },
+  "chat": {
+    "habilitado": true,
+    "en_dm": "siempre",
+    "en_canales": "nunca",
+    "disparador": "!",
+    "cooldown_s": 5,
+    "maximo_historial": 12,
+    "instrucciones": ".r34pete/instrucciones.md",
+    "responder_a_bots": false
+  },
+  "ia": {
+    "orden": ["pollinations", "gemini", "groq", "openrouter"],
+    "ollama_url": "http://127.0.0.1:11434",
+    "ollama_modelo": "superyuki-ia:latest",
+    "pollinations_modelo": "openai-fast",
+    "gemini_modelo": "gemini-2.5-flash",
+    "groq_modelo": "llama-3.3-70b-versatile",
+    "openrouter_modelo": "meta-llama/llama-3.3-70b-instruct:free",
+    "temperatura": 0.85,
+    "max_tokens": 400,
+    "claves": {}
+  },
+  "feeds": [
+    {
+      "id": "f2",
+      "canalId": "1562158527164850274",
+      "proveedor": "rule34",
+      "tags": "furry futa rating:explicit",
+      "medio": "video",
+      "cadaMinutos": 20,
+      "activado": true
+    },
+    {
+      "id": "f3",
+      "canalId": "1562158527164850274",
+      "proveedor": "rule34",
+      "tags": "furry futa rating:explicit",
+      "medio": "gif",
+      "cadaMinutos": 15,
+      "activado": true
+    }
+  ]
+}

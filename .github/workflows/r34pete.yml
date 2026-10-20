@@ -1,0 +1,73 @@
+name: R34pete (bot online)
+
+# El bot corre dentro de un workflow: los runners gratuitos de GitHub son
+# ilimitados en repositorios publicos y no hacen falta tarjetas ni cuentas.
+# Cada ejecucion aguanta hasta 6 h (limite de Actions) y el cron la relanza.
+
+on:
+  schedule:
+    # Cada 5 h; cada sesion dura 5 h 20 min, asi que hay solapamiento minimo.
+    - cron: "3,8,13,18,23 * * * *"
+  workflow_dispatch:
+    inputs:
+      minutos:
+        description: "Minutos que debe correr esta sesion"
+        default: "300"
+
+concurrency:
+  group: r34pete-bot
+  cancel-in-progress: false
+
+jobs:
+  bot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci --omit=dev
+
+      - name: Preparar configuracion
+        env:
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+          RULE34_USER_ID: ${{ secrets.RULE34_USER_ID }}
+          RULE34_API_KEY: ${{ secrets.RULE34_API_KEY }}
+        run: |
+          mkdir -p .r34pete
+          cp config.github.json .r34pete/config.json
+          node -e '
+            const fs = require("fs");
+            const p = ".r34pete/config.json";
+            const cfg = JSON.parse(fs.readFileSync(p, "utf8"));
+            cfg.token = process.env.DISCORD_TOKEN;
+            cfg.feedsFile = ".r34pete/feeds.json";
+            cfg.vistosFile = ".r34pete/vistos.json";
+            cfg.chat.instrucciones = ".r34pete/instrucciones.md";
+            cfg.providers.rule34.userId = process.env.RULE34_USER_ID || cfg.providers.rule34.userId;
+            cfg.providers.rule34.apiKey = process.env.RULE34_API_KEY || "";
+            cfg.providers.rule34.enabled = Boolean(cfg.providers.rule34.apiKey);
+            fs.writeFileSync(p, JSON.stringify(cfg, null, 2));
+          '
+          chmod 600 .r34pete/config.json
+          cp instrucciones.md .r34pete/instrucciones.md
+          echo "token: $([ -n "$DISCORD_TOKEN" ] && echo puesto || echo FALTA)"
+          echo "rule34: $([ -n "$RULE34_API_KEY" ] && echo con clave || echo sin clave)"
+
+      - name: Hablar con Discord
+        env:
+          R34PETE_CONFIG: .r34pete/config.json
+          R34PETE_INSTRUCCIONES: .r34pete/instrucciones.md
+        run: |
+          node src/index.js &
+          PID=$!
+          trap "kill $PID" SIGTERM
+          echo "bot arrancado (pid $PID), escuchando Discord..."
+          # El workflow termina solo al pasar el timeout-minutes; aqui se para.
+          while kill -0 $PID 2>/dev/null; do sleep 20; done
+          wait $PID || echo "el bot salio con codigo $?"

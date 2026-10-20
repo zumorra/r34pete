@@ -100,41 +100,6 @@ si no cabe ninguno, usa la versión pequeña que da el tablero.
 5. Los tableros se piden con un User-Agent propio y con espera entre
    peticiones, como piden sus reglas de uso.
 
-## Hosting: todo online
-
-El bot **no debe correr en tu PC**: en la nube, con la IA también online.
-
-Estos son los límites **verificados en la documentación oficial** (no en
-páginas de marketing):
-
-| Opción | Coste | ¿24/7? | Límites reales | Avisos |
-|---|---|---|---|---|
-| **Oracle micro** `VM.Standard.E2.1.Micro` | 0 € | sí | 2 instancias, 1/8 OCPU, 1 GB RAM, IP pública, 50 Mbps. Disco de arranque de 50 GB (mínimo). | La de **1 GB no tiene la regla de inactividad por memoria** → es la más segura para un bot parado. |
-| **Oracle A1** `VM.Standard.A1.Flex` | 0 € | sí | 2 OCPU + 12 GB en total (1.500 OCPU-h y 9.000 GB-h al mes). ARM. | **Ojo:** Oracle *reclama* las instancias Always Free ociosas si en 7 días la CPU (percentil 95) es < 20 %, la red < 20 % o la memoria < 20 % (solo A1). Un bot parado puede caer. Se evita subiendo a *Pay as You Go* (los recursos Always Free siguen siendo gratis) o moviendo la cuenta a una región con capacidad. |
-| **GCP e2-micro** | 0 € | sí | 1 instancia **no preemptible** en us-west1 / us-central1 / us-east1, 30 GB de disco. | **Solo 1 GB de salida al mes**: un bot que sirve imágenes lo puede agotar y acabar pagando. Oracle da 10 TB. |
-| **Railway** | 5 $/mes | sí | Trial de 5 $ (30 días) **sin tarjeta**; luego plan Hobby de 5 $/mes. | La única opción sin tarjeta, pero temporal. |
-| Koyeb Free | 0 € | **no** | 5 h/mes. | Descartado. |
-| HF Spaces CPU | 0 € | **no** | Duerme tras inactividad y el plan nuevo pide pago para compute. | Descartado. |
-| GitHub Codespaces | 0 € | **no** | 60 h/mes de 2 vCPU. | Descartado. |
-
-### Oracle en 4 pasos
-
-1. `cloud.oracle.com/free` → *Start for free* (móvil y **tarjeta para verificar**;
-   no cobran nada salvo que subas de plan).
-2. **Create instance** → shape `VM.Standard.E2.1.Micro` (recomendado para un
-   bot parado) o `VM.Standard.A1.Flex` con **2 OCPU y 12 GB** → imagen
-   Ubuntu 22.04/24.04.
-3. Red: VCN por defecto, subred pública, **ingress 22/tcp** (SSH) y sube tu
-   clave pública (`~/.ssh/r34pete_oci.pub`).
-4. *Advanced options → Cloud-init script*: pega `cloud-init.sh` (prepara Node,
-   el usuario y el servicio).
-
-Y luego, desde la master:
-
-```bash
-bash ~/superyuki-arreglos/r34pete/desplegar-remoto.sh <IP_PUBLICA> ubuntu ~/.ssh/r34pete_oci
-```
-
 ## Instalación
 
 ### En cualquier Linux (Ubuntu / Oracle Linux)
