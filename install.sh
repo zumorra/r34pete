@@ -35,7 +35,16 @@ node -v
 
 echo "==> Usuario y directorios"
 id -u "$USUARIO" >/dev/null 2>&1 || useradd --system --home-dir /opt/r34pete --shell /usr/sbin/nologin "$USUARIO"
-mkdir -p "$DESTINO" /etc/r34pete
+mkdir -p "$DESTINO" /etc/r34pete /var/lib/r34pete
+chown "$USUARIO" /var/lib/r34pete
+# Ruta estable de node: en la master es un snap (/snap/bin/node), en Oracle es
+# /usr/bin/node (NodeSource). El servicio usa /usr/local/bin/node.
+if [ -x /usr/bin/node ]; then
+  ln -sf /usr/bin/node /usr/local/bin/node
+elif [ -x /snap/bin/node ] && [ ! -x /usr/local/bin/node ]; then
+  echo "AVISO: node es un snap; el servicio necesita un node real (instala el tarball en /opt/node)" >&2
+fi
+echo "node: $(/usr/local/bin/node -v 2>/dev/null || node -v)"
 if [[ -f "$CONF" ]]; then
   cp -a "$CONF" "$CONF.bak-$(date +%Y%m%d-%H%M%S)"
   echo "Config anterior guardado"

@@ -9,8 +9,9 @@ User=r34pete
 Group=r34pete
 WorkingDirectory=/opt/r34pete
 Environment=NODE_ENV=production
+Environment=HOME=/var/lib/r34pete
 Environment=R34PETE_CONFIG=/etc/r34pete/config.json
-ExecStart=/usr/bin/node /opt/r34pete/src/index.js
+ExecStart=/usr/local/bin/node /opt/r34pete/src/index.js
 Restart=always
 RestartSec=10
 StandardOutput=journal

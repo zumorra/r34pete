@@ -19,7 +19,10 @@ apt-get install -y nodejs
 
 echo "== usuario r34pete =="
 id -u r34pete >/dev/null 2>&1 || useradd --system --home-dir /opt/r34pete --shell /usr/sbin/nologin r34pete
-mkdir -p /opt/r34pete /etc/r34pete
+mkdir -p /opt/r34pete /etc/r34pete /var/lib/r34pete
+chown r34pete /var/lib/r34pete
+ln -sf /usr/bin/node /usr/local/bin/node
+node -v
 
 echo "== servicio =="
 cat > /etc/systemd/system/r34pete.service <<'UNIT'
@@ -34,8 +37,9 @@ User=r34pete
 Group=r34pete
 WorkingDirectory=/opt/r34pete
 Environment=NODE_ENV=production
+Environment=HOME=/var/lib/r34pete
 Environment=R34PETE_CONFIG=/etc/r34pete/config.json
-ExecStart=/usr/bin/node /opt/r34pete/src/index.js
+ExecStart=/usr/local/bin/node /opt/r34pete/src/index.js
 Restart=always
 RestartSec=10
 StandardOutput=journal
