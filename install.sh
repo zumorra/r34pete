@@ -64,7 +64,12 @@ chmod 640 "$CONF"
 echo "==> Servicio"
 install -m 644 "$ORIGEN/r34pete.service" "$UNIDAD"
 systemctl daemon-reload
-systemctl enable r34pete
+# En la maquina de Yuki el bot NO debe correr: se instala sin arrancar.
+if [ "${R34PETE_NO_ENABLE:-0}" = "1" ]; then
+  echo "instalado SIN arrancar (R34PETE_NO_ENABLE=1)"
+else
+  systemctl enable --now r34pete
+fi
 
 echo
 echo "Listo. Falta:"
