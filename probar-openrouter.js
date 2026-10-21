@@ -64,6 +64,18 @@ global.fetch = async (url, opciones) => {
   assert.ok(err && /falta la clave de openrouter/.test(err.message), "debe avisar de la clave");
   console.log("ok 3: sin clave ->", err.message);
 
+  // 4) groq (u otro proveedor) con una lista con comas: NO puede llevar 'models',
+  //    solo 'model' (el array 'models' es exclusivo de OpenRouter).
+  capturado.length = 0;
+  r = await ia.responder(
+    { ...cfg, orden: ["groq"], groq_modelo: "a,b,c", claves: { groq: "gsk_falsa" } },
+    mensajes
+  );
+  p = capturado.at(-1);
+  assert.ok(!p.body.models, "groq no debe recibir 'models'");
+  assert.strictEqual(p.body.model, "a,b,c");
+  console.log("ok 4: groq con lista -> body.model =", p.body.model, "(sin 'models')");
+
   console.log("todo correcto");
 })().catch((e) => {
   console.error("FALLO:", e.message);
