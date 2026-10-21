@@ -90,6 +90,7 @@ jobs:
           '
           chmod 600 .r34pete/config.json
           cp instrucciones.md .r34pete/instrucciones.md
+          cp respuestas.json .r34pete/respuestas.json
           # Semilla del registro de "ya publicado" (evita repetir al reiniciar).
           if [ -f vistos.json ]; then cp vistos.json .r34pete/vistos.json; fi
           echo "token: $([ -n "$DISCORD_TOKEN" ] && echo puesto || echo FALTA)"
@@ -152,7 +153,7 @@ jobs:
             if [ -f .r34pete/vistos.json ] || [ -f .r34pete/pendientes.json ]; then
               git config user.name "r34pete"
               git config user.email "r34pete@users.noreply.github.com"
-              git add .r34pete/vistos.json .r34pete/pendientes.json || true
+              git add --ignore-unmatch .r34pete/vistos.json .r34pete/pendientes.json || true
               git diff --cached --quiet || git commit -q -m "registro de publicados" || true
               # main puede haber avanzado (cambios del repo): se rebasa antes de
               # subir; si el rebase no sale, se aborta y se salta este ciclo.
