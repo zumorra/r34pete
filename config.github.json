@@ -74,7 +74,13 @@
       "tags": "furry futa rating:explicit",
       "medio": "video",
       "cadaMinutos": 1,
-      "activado": true
+      "activado": true,
+      "slots": [
+        "largo",
+        "largo",
+        "medio",
+        "extraCorto"
+      ]
     },
     {
       "id": "f3",
@@ -83,7 +89,11 @@
       "tags": "furry futa rating:explicit",
       "medio": "gif",
       "cadaMinutos": 1,
-      "activado": true
+      "activado": true,
+      "slots": [
+        "cualquiera",
+        "cualquiera"
+      ]
     }
   ],
   "pendientesFile": ".r34pete/pendientes.json",
@@ -98,5 +108,6 @@
   "telegram": {
     "token": "",
     "chatDueno": ""
-  }
+  },
+  "feedEstadoFile": ".r34pete/feed-estado.json"
 }

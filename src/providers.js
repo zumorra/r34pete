@@ -77,6 +77,33 @@ function tipoDe(url, ext) {
   return "otro";
 }
 
+/**
+ * Tamano del fichero en bytes, sin descargarlo entero (HEAD; si el servidor
+ * no lo soporta, Range 0-0). Se usa para distinguir videos largos de cortos.
+ */
+async function tamanoDe(url, userAgent) {
+  if (!url) return 0;
+  try {
+    const r = await fetch(url, { method: "HEAD", headers: { "User-Agent": userAgent } });
+    const len = Number(r.headers.get("content-length") || 0);
+    if (len > 0) return len;
+  } catch (e) {
+    // algunos CDN no admiten HEAD: se prueba con un Range
+  }
+  try {
+    const r = await fetch(url, {
+      headers: { "User-Agent": userAgent, Range: "bytes=0-0" },
+    });
+    const cr = r.headers.get("content-range") || "";
+    const m = cr.match(/\/(\d+)$/);
+    if (m) return Number(m[1]);
+    const len = Number(r.headers.get("content-length") || 0);
+    return len > 1 ? len : 0;
+  } catch (e) {
+    return 0;
+  }
+}
+
 /** Etiqueta que usa cada tablero para el contenido animado. */
 const ETIQUETA_ANIMADA = {
   rule34: "animated",
@@ -346,5 +373,6 @@ module.exports = {
   ErrorProveedor,
   PROVEEDORES,
   extensionDe,
+  tamanoDe,
   tipoDe,
 };

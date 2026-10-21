@@ -92,8 +92,14 @@ const COMANDOS = [
           o
             .setName("minutos")
             .setDescription("Cada cuantos minutos publica (minimo 1).")
-            .setMinValue(5)
+            .setMinValue(1)
             .setMaxValue(10080)
+        )
+        .addStringOption((o) =>
+          o
+            .setName("perfil")
+            .setDescription("Que publica en cada tirada (largo, medio, corto, extraCorto o cualquiera).")
+            .setRequired(false)
         )
     )
     .addSubcommand((s) =>

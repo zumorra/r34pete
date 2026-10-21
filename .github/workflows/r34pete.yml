@@ -68,6 +68,7 @@ jobs:
             cfg.pendientesFile = ".r34pete/pendientes.json";
             cfg.chat.instrucciones = ".r34pete/instrucciones.md";
             cfg.conocimientoFile = ".r34pete/respuestas.json";
+            cfg.feedEstadoFile = ".r34pete/feed-estado.json";
             cfg.social = cfg.social || {};
             cfg.social.archivo = ".r34pete/borradores.json";
             cfg.social.appId = process.env.DISCORD_SOCIAL_APP_ID || "";

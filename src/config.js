@@ -80,6 +80,8 @@ const POR_DEFECTO = {
   pendientesFile: "/var/lib/r34pete/pendientes.json",
   // Base de conocimiento: "si te preguntan X, responde Y".
   conocimientoFile: "/var/lib/r34pete/respuestas.json",
+  // Estado de los feeds: pagina por la que va cada uno y tamanos ya sabidos.
+  feedEstadoFile: "/var/lib/r34pete/feed-estado.json",
   // Social SDK de Discord: lee la bandeja de privados de Yuki y deja las
   // respuestas preparadas para mandarlas con /enviar.
   // Telegram: el mismo cerebro donde si puede contestar de verdad solo.

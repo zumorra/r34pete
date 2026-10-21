@@ -36,6 +36,7 @@ const { Pendientes } = require("./pendientes");
 const { Historial } = require("./historial");
 const ia = require("./ia");
 const { GestorFeeds } = require("./feed");
+const { EstadoFeeds } = require("./feed-estado");
 const guard = require("./guard");
 
 const cfg = cargar();
@@ -57,6 +58,8 @@ const cliente = new Client({
 });
 cliente.cfg = cfg;
 cliente.feeds = new GestorFeeds(cliente);
+// Estado de los feeds: pagina por la que va cada uno y tamanos ya sabidos.
+cliente.estadoFeeds = new EstadoFeeds(cfg.feedEstadoFile);
 // Registro de lo ya publicado, en disco: evita repetir entre reinicios.
 cliente.vistos = new Vistos(cfg.vistosFile);
 // Chat automatico: instrucciones (fichero, recarga en caliente), memoria de
@@ -609,6 +612,10 @@ async function cmdFeed(interaccion) {
       );
     }
     const minutos = interaccion.options.getInteger("minutos") || 30;
+    const perfil = (interaccion.options.getString("perfil") || "")
+      .split(",")
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean);
     const feed = cliente.feeds.crear({
       canalId: canal.id,
       proveedor: fuente,
@@ -616,6 +623,7 @@ async function cmdFeed(interaccion) {
       medio,
       cadaMinutos: minutos,
       activado: true,
+      slots: perfil.length ? perfil : undefined,
     });
     guardarFeeds();
     return respuestaEphemeral(
