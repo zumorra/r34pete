@@ -91,7 +91,7 @@ const COMANDOS = [
         .addIntegerOption((o) =>
           o
             .setName("minutos")
-            .setDescription("Cada cuantos minutos publica (minimo 5).")
+            .setDescription("Cada cuantos minutos publica (minimo 1).")
             .setMinValue(5)
             .setMaxValue(10080)
         )

@@ -19,7 +19,7 @@ class Feed {
     this.proveedor = datos.proveedor || "e621";
     this.tags = datos.tags || "";
     this.medio = datos.medio || "imagen";
-    this.cadaMinutos = Math.max(5, Number(datos.cadaMinutos || 30));
+    this.cadaMinutos = Math.max(1, Number(datos.cadaMinutos || 30));
     this.activado = datos.activado !== false;
     this.etiquetasPermitidas = datos.etiquetasPermitidas || null;
     this.cliente = cliente;
@@ -60,6 +60,17 @@ class Feed {
   }
 
   async publicar() {
+    // Con intervalo corto una publicacion puede solaparse con la anterior.
+    if (this.publicando) return;
+    this.publicando = true;
+    try {
+      await this.publicarAhora();
+    } finally {
+      this.publicando = false;
+    }
+  }
+
+  async publicarAhora() {
     const canal = await this.cliente.channels.fetch(this.canalId).catch(() => null);
     if (!canal || !canal.isTextBased()) return;
     if (!canalEsNsfw(canal)) {
@@ -81,7 +92,7 @@ class Feed {
     let probadas = 0;
     let restantes = 0;
     const candidatos = [];
-    for (let salto = 0; salto < 16 && candidatos.length < 10; salto++) {
+    for (let salto = 0; salto < 16 && candidatos.length < 5; salto++) {
       const pagina = this.pagina + salto;
       const resultados = await proveedores.buscar(
         this.cliente.cfg,
