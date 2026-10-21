@@ -218,10 +218,16 @@ class Feed {
         if (candidatos.length >= CANDIDATOS_MAX) break;
       }
     }
-    // La pagina sigue avanzando: el indice de rule34 tiene miles de entradas
-    // y asi el feed va metiendose en material cada vez mas viejo en vez de
-    // dar la vuelta y repetir lo mismo.
-    estado.pagina = ((estado.pagina || 0) + Math.max(1, probadas)) % 400;
+    // La pagina sigue avanzando poco a poco (una por tirada): asi el contenido
+    // es razonablemente reciente y no se agota el indice. El indice de rule34
+    // tiene miles de entradas, asi que da tiempo de sobra a que sehara todo
+    // antes de volver al principio (y al volver, lo ya publicado se ignora).
+    if (!probadas) {
+      // No queda nada en las paginas siguientes: se vuelve al principio.
+      estado.pagina = 0;
+    } else {
+      estado.pagina = ((estado.pagina || 0) + 1) % 400;
+    }
     if (this.cliente.estadoFeeds) this.cliente.estadoFeeds.guardarDe(this.id);
 
     if (!candidatos.length) {
