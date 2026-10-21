@@ -19,15 +19,28 @@ on:
         description: "Horas que se queda vivo el cubo (maximo 5)"
         required: false
         default: "5"
+  schedule:
+    # El repo es publico: los minutos de GitHub Actions no cuentan. Cada
+    # arranque es un runner nuevo = una IP nueva = un cubo de cuota nuevo.
+    - cron: "17 */4 * * *"
 
 permissions:
   contents: read
+  actions: write
 
 jobs:
   nube:
     runs-on: ubuntu-latest
     timeout-minutes: 330
     steps:
+      - name: Cancelar los runs anteriores del cubo
+        continue-on-error: true
+        run: |
+          gh run list --workflow="${{ github.workflow }}" --status in_progress \
+            --json databaseId -q '.[].databaseId' | while read -r id; do
+              gh run cancel "$id" -R "${{ github.repository }}" || true
+            done
+
       - uses: actions/checkout@v4
 
       - name: Instalar el cliente de OpenCode y cloudflared
