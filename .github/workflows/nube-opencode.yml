@@ -1,0 +1,98 @@
+name: Cubo de nube (OpenCode en la nube)
+
+# El tier gratis de OpenCode (modelos ":free") tiene el tope POR IP: la master
+# se queda sin cuota de DeepSeek y el runner de GitHub Actions sale por OTRA
+# IP, asi que su cubo sigue vivo.
+#
+# Este workflow deja OpenCode CORRIENDO en la nube (no en nuestra PC): levanta
+# el cliente oficial de OpenCode dentro del runner y lo publica con un tunel
+# de Cloudflare, de modo que la master (y los bots) puedan hablar con el
+# OpenCode de la nube por una API OpenAI-compatible.
+#
+#   gh workflow run nube-opencode.yml
+#   -> publica la URL publica en el artefacto "nube-url"
+
+on:
+  workflow_dispatch:
+    inputs:
+      horas:
+        description: "Horas que se queda vivo el cubo (maximo 5)"
+        required: false
+        default: "5"
+
+permissions:
+  contents: read
+
+jobs:
+  nube:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar el cliente de OpenCode y cloudflared
+        run: |
+          set -euo pipefail
+          npm install -g opencode-ai@1 --no-fund --no-audit
+          opencode --version
+          curl -fsSL -o /tmp/cloudflared \
+            https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
+          chmod +x /tmp/cloudflared
+          /tmp/cloudflared --version
+
+      - name: Levantar el puente OpenAI-compatible
+        env:
+          CUBO_TOKEN: ${{ secrets.CUBO_TOKEN }}
+        run: |
+          set -uo pipefail
+          mkdir -p salida
+          node herramientas/nube-opencode-shim.mjs > salida/shim.log 2>&1 &
+          sleep 3
+          curl -s -m 5 http://127.0.0.1:8080/health || { cat salida/shim.log; exit 1; }
+          echo
+
+      - name: Publicar el tunel
+        run: |
+          set -uo pipefail
+          /tmp/cloudflared tunnel --no-autoupdate --url http://127.0.0.1:8080 \
+            > salida/cloudflared.log 2>&1 &
+          URL=""
+          for i in $(seq 1 40); do
+            URL=$(grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' salida/cloudflared.log | head -1 || true)
+            [ -n "$URL" ] && break
+            sleep 2
+          done
+          if [ -z "$URL" ]; then cat salida/cloudflared.log; exit 1; fi
+          printf '%s' "$URL" > salida/nube-url.txt
+          echo "URL publica del cubo: $URL"
+          echo "### Cubo de nube" >> "$GITHUB_STEP_SUMMARY"
+          echo "URL: $URL" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publicar la URL como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: nube-url
+          path: salida/nube-url.txt
+          retention-days: 1
+
+      - name: Probar el cubo (DeepSeek desde la nube)
+        env:
+          CUBO_TOKEN: ${{ secrets.CUBO_TOKEN }}
+        run: |
+          set -uo pipefail
+          URL=$(cat salida/nube-url.txt)
+          echo "probando deepseek-v4.1-flash-free desde la nube..."
+          curl -s -m 300 -H "Authorization: Bearer $CUBO_TOKEN" -H "Content-Type: application/json" \
+            "$URL/v1/chat/completions" \
+            -d '{"model":"deepseek-v4.1-flash-free","messages":[{"role":"user","content":"di OK"}]}' \
+            | tee salida/prueba.json | head -c 600
+          echo
+
+      - name: Mantener vivo el cubo
+        run: |
+          set -uo pipefail
+          HORAS="${{ inputs.horas }}"
+          [ -z "$HORAS" ] && HORAS=5
+          SEGUNDOS=$(( HORAS * 3600 ))
+          echo "el cubo vive ${HORAS}h (la IP del runner es la que tiene el cubo de cuota)"
+          sleep "$SEGUNDOS"
