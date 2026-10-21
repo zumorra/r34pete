@@ -100,6 +100,16 @@ jobs:
           echo "openrouter: $([ -n "$OPENROUTER_API_KEY" ] && echo con clave || echo SIN clave)"
           echo "modelo openrouter: $(node -e 'console.log(JSON.parse(require("fs").readFileSync(".r34pete/config.json","utf8")).ia.openrouter_modelo)')"
 
+      # Pruebas de unidad (sin internet ni Discord): si un cambio rompe el
+      # registro de publicados, el feed o el cuerpo de la IA, la run PARA AQUI
+      # en vez de arrancar el bot roto.
+      - name: Probar el codigo
+        run: |
+          node probar-openrouter.js
+          node probar-vistos.js
+          node probar-feed.js
+          echo "todas las pruebas de unidad pasan"
+
       # Comprobacion real del backend de IA: llama a OpenRouter con la clave de
       # la instancia y escribe en el log el modelo que sirvio de verdad.
       - name: Probar el backend openrouter

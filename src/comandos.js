@@ -92,7 +92,7 @@ const COMANDOS = [
           o
             .setName("minutos")
             .setDescription("Cada cuantos minutos publica (minimo 1).")
-            .setMinValue(5)
+            .setMinValue(1)
             .setMaxValue(10080)
         )
     )
