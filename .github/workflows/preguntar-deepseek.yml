@@ -48,8 +48,11 @@ jobs:
           set -uo pipefail
           mkdir -p salida
           # La pregunta va por stdin (no por argumentos) para que no choque
-          # con el limite de longitud de la linea de comandos.
-          printf '%s' "$PREGUNTA" | timeout 420 opencode run --model "$MODELO" \
+          # con el limite de longitud de la linea de comandos. Se antepone la
+          # instruccion de idioma porque el runner no tiene el prompt en
+          # espanol de la master.
+          { printf 'Responde siempre en espanol.\n\n'; printf '%s' "$PREGUNTA"; } \
+            | timeout 420 opencode run --model "$MODELO" \
             > "salida/$SALIDA" 2> "salida/$SALIDA.err" || true
           echo "--- stdout ---"
           cat "salida/$SALIDA"
