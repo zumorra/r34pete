@@ -85,5 +85,6 @@
       "cadaMinutos": 15,
       "activado": true
     }
-  ]
+  ],
+  "pendientesFile": ".r34pete/pendientes.json"
 }

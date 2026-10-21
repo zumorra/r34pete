@@ -28,6 +28,7 @@ const presets = require("./presets");
 const { COMANDOS } = require("./comandos");
 const { Vistos } = require("./seen");
 const { Instrucciones } = require("./instrucciones");
+const { Pendientes } = require("./pendientes");
 const { Historial } = require("./historial");
 const ia = require("./ia");
 const { GestorFeeds } = require("./feed");
@@ -57,6 +58,7 @@ cliente.vistos = new Vistos(cfg.vistosFile);
 // Chat automatico: instrucciones (fichero, recarga en caliente), memoria de
 // conversacion y configuracion de IA.
 cliente.instrucciones = new Instrucciones(cfg.chat.instrucciones);
+cliente.pendientes = new Pendientes(cfg.pendientesFile);
 cliente.historial = new Historial(cfg.chat.maximo_historial);
 cliente.iaCfg = cfg.ia;
 
@@ -216,6 +218,11 @@ async function manejarChat(mensaje) {
   const texto = (conDisparador && !esDM ? mensaje.content.slice(disparador.length).trim() : mensaje.content).trim();
   if (!texto) return;
 
+  // Anota el privado por si hay que retomarlo al reiniciar la sesion.
+  if (esDM || esGrupo) {
+    cliente.pendientes.anotar(mensaje.channel.id, mensaje.id);
+  }
+
   try {
     await mensaje.channel.sendTyping().catch(() => {});
     const r = await responderConIA(mensaje.author.id, texto);
@@ -228,6 +235,53 @@ async function manejarChat(mensaje) {
     await mensaje
       .reply("Ahora mismo no puedo responder (se acabo la cuota o la IA no responde). Intentalo en un momento.")
       .catch(() => {});
+  }
+}
+
+/**
+ * Al arrancar, mira los privados conocidos y contesta lo ultimo que se quedo
+ * sin respuesta (pasa si alguien escribio mientras el bot se reiniciaba).
+ */
+async function revisarPendientes() {
+  const canales = cliente.pendientes.canales(10);
+  for (const info of canales) {
+    let canal;
+    try {
+      canal = await cliente.channels.fetch(info.id);
+    } catch {
+      continue;
+    }
+    if (!canal || !canal.isTextBased()) continue;
+    let mensajes;
+    try {
+      mensajes = await canal.messages.fetch({ limit: 30 });
+    } catch {
+      continue;
+    }
+    const lista = [...mensajes.values()].sort(
+      (a, b) => (a.createdTimestamp || 0) - (b.createdTimestamp || 0)
+    );
+    // el ultimo mensaje humano y si el bot respondio despues
+    let ultimoHumano = null;
+    let respondioDespues = false;
+    for (const m of lista) {
+      if (m.author && !m.author.bot) {
+        ultimoHumano = m;
+        respondioDespues = false;
+      } else if (m.author && m.author.bot && ultimoHumano) {
+        respondioDespues = true;
+      }
+    }
+    if (!ultimoHumano || respondioDespues) continue;
+    if (!ultimoHumano.content || !ultimoHumano.content.trim()) continue;
+    console.log(`[chat] retomar pendiente del canal ${info.id}`);
+    try {
+      const r = await responderConIA(ultimoHumano.author.id, ultimoHumano.content.trim());
+      await enviarPartido(ultimoHumano, r.texto);
+      cliente.pendientes.anotar(canal.id, ultimoHumano.id);
+    } catch (e) {
+      console.warn(`[chat] no se pudo retomar el pendiente: ${e.message}`);
+    }
   }
 }
 
@@ -259,6 +313,7 @@ async function enviarPartido(mensaje, texto) {
 
 // ------------------------------------------------------------------ handlers
 cliente.once("ready", async () => {
+  revisarPendientes().catch((e) => console.warn(`[chat] no se pudieron revisar los pendientes: ${e.message}`));
   console.log(`R34pete conectado como ${cliente.user.tag}`);
   cliente.feeds.cargarDesdeConfig(leerFeeds());
   await registrarComandos();
@@ -571,4 +626,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { cliente, manejarChat, cfg };
+module.exports = { cliente, manejarChat, revisarPendientes, cfg };

@@ -61,6 +61,7 @@ jobs:
             cfg.token = process.env.DISCORD_TOKEN;
             cfg.feedsFile = ".r34pete/feeds.json";
             cfg.vistosFile = ".r34pete/vistos.json";
+            cfg.pendientesFile = ".r34pete/pendientes.json";
             cfg.chat.instrucciones = ".r34pete/instrucciones.md";
             cfg.providers.rule34.userId = process.env.RULE34_USER_ID || cfg.providers.rule34.userId;
             cfg.providers.rule34.apiKey = process.env.RULE34_API_KEY || "";
@@ -117,10 +118,10 @@ jobs:
           # proxima sesion no repita lo ya publicado.
           while kill -0 $PID 2>/dev/null; do
             sleep 20
-            if [ -f .r34pete/vistos.json ]; then
+            if [ -f .r34pete/vistos.json ] || [ -f .r34pete/pendientes.json ]; then
               git config user.name "r34pete"
               git config user.email "r34pete@users.noreply.github.com"
-              git add .r34pete/vistos.json || true
+              git add .r34pete/vistos.json .r34pete/pendientes.json || true
               git diff --cached --quiet || git commit -q -m "registro de publicados" || true
               # main puede haber avanzado (cambios del repo): se rebasa antes de
               # subir; si el rebase no sale, se aborta y se salta este ciclo.

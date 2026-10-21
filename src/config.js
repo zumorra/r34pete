@@ -76,6 +76,8 @@ const POR_DEFECTO = {
   // Fichero propio (escribible por el bot) donde se guardan los feeds
   // creados con /feed. La configuración con el token no se toca nunca.
   feedsFile: "/var/lib/r34pete/feeds.json",
+  // Privados conocidos, para retomar lo que se quedo sin contestar.
+  pendientesFile: "/var/lib/r34pete/pendientes.json",
   // Registro de lo ya publicado, para no repetir.
   vistosFile: "/var/lib/r34pete/vistos.json",
   logLevel: "info",
