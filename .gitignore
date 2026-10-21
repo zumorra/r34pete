@@ -3,3 +3,6 @@ npm-debug.log*
 config.json
 *.log
 .DS_Store
+borradores.json
+.r34pete/borradores.json
+social/borradores.json

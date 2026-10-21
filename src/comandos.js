@@ -22,6 +22,17 @@ const MEDIOS = [
 
 const COMANDOS = [
   new SlashCommandBuilder()
+    .setName("enviar")
+    .setDescription("Manda un borrador preparado por la IA a tu bandeja de Discord.")
+    .addStringOption((o) =>
+      o.setName("id").setDescription("Id del borrador (miralos con /borradores).").setRequired(true)
+    ),
+
+  new SlashCommandBuilder()
+    .setName("borradores")
+    .setDescription("Lista los borradores que esperan que los mandes."),
+
+  new SlashCommandBuilder()
     .setName("saber")
     .setDescription("Muestra lo que el bot sabe responder (reglas cargadas)."),
 

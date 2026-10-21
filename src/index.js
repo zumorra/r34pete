@@ -29,6 +29,8 @@ const { COMANDOS } = require("./comandos");
 const { Vistos } = require("./seen");
 const { Instrucciones } = require("./instrucciones");
 const { Conocimiento } = require("./conocimiento");
+const { Social } = require("../social/social");
+const { Borradores } = require("../social/borradores");
 const { Pendientes } = require("./pendientes");
 const { Historial } = require("./historial");
 const ia = require("./ia");
@@ -60,6 +62,9 @@ cliente.vistos = new Vistos(cfg.vistosFile);
 // conversacion y configuracion de IA.
 cliente.instrucciones = new Instrucciones(cfg.chat.instrucciones);
 cliente.conocimiento = new Conocimiento(cfg.conocimientoFile);
+// Social SDK: lee la bandeja de privados de Yuki y prepara respuestas.
+cliente.social = new Social(cfg.social || {});
+cliente.borradores = new Borradores((cfg.social || {}).archivo || "/var/lib/r34pete/borradores.json");
 cliente.pendientes = new Pendientes(cfg.pendientesFile);
 cliente.historial = new Historial(cfg.chat.maximo_historial);
 cliente.iaCfg = cfg.ia;
@@ -288,6 +293,93 @@ async function revisarPendientes() {
 }
 
 /**
+ * Lee la bandeja de privados de Yuki (Social SDK), redacta con la IA lo que le
+ * escriben y deja el borrador listo para mandarlo con /enviar.
+ *
+ * Discord solo permite enviar mensajes en nombre de un usuario tras una accion
+ * explicita de ese usuario, asi que aqui NUNCA se envia solo: se redacta solo y
+ * el envio lo pide Yuki.
+ */
+async function bucleSocial() {
+  const ok = await cliente.social.iniciar();
+  if (!ok) return;
+  const cada = Math.max(1, (cfg.social || {}).cadaMinutos || 3);
+  while (true) {
+    await new Promise((r) => setTimeout(r, cada * 60 * 1000));
+    try {
+      const nuevos = await cliente.social.bandeja();
+      for (const n of nuevos) {
+        const r = await responderConIA(`social:${n.destinatario}`, n.texto);
+        const borrador = cliente.borradores.anadir({
+          destinatario: n.destinatario,
+          usuario: n.usuario || "",
+          mensajeId: n.mensajeId,
+          texto: n.texto,
+          respuesta: r.texto,
+        });
+        if (!borrador) continue;
+        console.log(`[social] borrador ${borrador.id} para ${n.destinatario}`);
+        await avisarDueno(borrador);
+      }
+    } catch (e) {
+      console.warn(`[social] fallo el ciclo: ${e.message}`);
+    }
+  }
+}
+
+/** Avisa a Yuki por privado de que hay un borrador nuevo. */
+async function avisarDueno(borrador) {
+  const id = (cfg.social || {}).dueno;
+  if (!id) return;
+  try {
+    const user = await cliente.users.fetch(id);
+    await user.send(
+      `📝 **Borrador ${borrador.id}** de ${borrador.usuario || borrador.destinatario}:\n> ${borrador.texto}\n\nMi respuesta:\n> ${borrador.respuesta}\n\nPara mandarla: \`/enviar ${borrador.id}\``
+    );
+  } catch (e) {
+    console.warn(`[social] no se pudo avisar al dueno: ${e.message}`);
+  }
+}
+
+/** /enviar <id>: manda un borrador (esto SI es la accion del usuario). */
+async function cmdEnviar(interaccion) {
+  const id = interaccion.options.getString("id", true);
+  const borrador = cliente.borradores.porId(id);
+  if (!borrador) {
+    return await respuestaEphemeral(interaccion, { content: "No hay ningun borrador con ese id." });
+  }
+  if (borrador.enviado) {
+    return await respuestaEphemeral(interaccion, { content: "Ese borrador ya se habia mandado." });
+  }
+  try {
+    await cliente.social.enviar(borrador.destinatario, borrador.respuesta);
+    cliente.borradores.marcarEnviado(borrador.id);
+    await respuestaEphemeral(interaccion, {
+      content: `✅ Mandado a ${borrador.usuario || borrador.destinatario}:\n> ${borrador.respuesta}`,
+    });
+  } catch (e) {
+    await respuestaEphemeral(interaccion, { content: `No se pudo enviar: ${e.message}` });
+  }
+}
+
+/** /borradores: lista los pendientes. */
+async function cmdBorradores(interaccion) {
+  const lista = cliente.borradores.listar();
+  if (!lista.length) {
+    return await respuestaEphemeral(interaccion, { content: "No hay borradores pendientes." });
+  }
+  const texto = lista
+    .map(
+      (b) =>
+        `**${b.id}** - de ${b.usuario || b.destinatario}: "${String(b.texto || "").slice(0, 90)}"\n> ${String(b.respuesta || "").slice(0, 300)}`
+    )
+    .join("\n\n");
+  await respuestaEphemeral(interaccion, {
+    content: `**Borradores pendientes** (manda con \`/enviar <id>\`):\n\n${texto}`,
+  });
+}
+
+/**
  * Pide una respuesta a la IA con el contexto del usuario y la guarda en el
  * historial. La usan tanto los DMs automaticos como el comando /chat.
  */
@@ -328,6 +420,9 @@ async function enviarPartido(mensaje, texto) {
 // ------------------------------------------------------------------ handlers
 cliente.once("ready", async () => {
   revisarPendientes().catch((e) => console.warn(`[chat] no se pudieron revisar los pendientes: ${e.message}`));
+  if ((cfg.social || {}).habilitado) {
+    bucleSocial().catch((e) => console.warn(`[social] el bucle se ha parado: ${e.message}`));
+  }
   console.log(`R34pete conectado como ${cliente.user.tag}`);
   cliente.feeds.cargarDesdeConfig(leerFeeds());
   await registrarComandos();
@@ -341,6 +436,8 @@ cliente.on("interactionCreate", async (interaccion) => {
     if (interaccion.commandName === "feed") return await cmdFeed(interaccion);
     if (interaccion.commandName === "instrucciones") return await cmdInstrucciones(interaccion);
     if (interaccion.commandName === "saber") return await cmdSaber(interaccion);
+    if (interaccion.commandName === "enviar") return await cmdEnviar(interaccion);
+    if (interaccion.commandName === "borradores") return await cmdBorradores(interaccion);
     if (interaccion.commandName === "ia") return await cmdIa(interaccion);
     if (interaccion.commandName === "olvidar") return await cmdOlvidar(interaccion);
     if (interaccion.commandName === "chat") return await cmdChat(interaccion);

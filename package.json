@@ -15,5 +15,8 @@
     "discord.js": "^14.16.3"
   },
   "license": "MIT",
-  "private": true
+  "private": true,
+  "optionalDependencies": {
+    "@discordkit/native": "^0.3.2"
+  }
 }

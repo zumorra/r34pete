@@ -25,6 +25,10 @@ jobs:
   bot:
     runs-on: ubuntu-latest
     timeout-minutes: 330
+    env:
+      # ¿Hay que bajar la libreria nativa del Social SDK? (no es un secreto,
+      # solo una bandera: el secreto va en el paso que la descarga).
+      SOCIAL_SDK_ACTIVO: ${{ secrets.SOCIAL_SDK_URL != '' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -64,6 +68,9 @@ jobs:
             cfg.pendientesFile = ".r34pete/pendientes.json";
             cfg.chat.instrucciones = ".r34pete/instrucciones.md";
             cfg.conocimientoFile = ".r34pete/respuestas.json";
+            cfg.social = cfg.social || {};
+            cfg.social.archivo = ".r34pete/borradores.json";
+            cfg.social.appId = process.env.DISCORD_SOCIAL_APP_ID || "";
             cfg.providers.rule34.userId = process.env.RULE34_USER_ID || cfg.providers.rule34.userId;
             cfg.providers.rule34.apiKey = process.env.RULE34_API_KEY || "";
             cfg.providers.rule34.enabled = Boolean(cfg.providers.rule34.apiKey);
@@ -104,11 +111,34 @@ jobs:
         run: |
           node probar-ia.js || echo "aviso: ningun backend respondio (el bot seguira con el siguiente)"
 
+      - name: Bajar la libreria del Social SDK
+        if: env.SOCIAL_SDK_ACTIVO == 'true'
+        env:
+          SOCIAL_SDK_URL: ${{ secrets.SOCIAL_SDK_URL }}
+          SOCIAL_SDK_TOKEN: ${{ secrets.SOCIAL_SDK_TOKEN }}
+        run: |
+          mkdir -p .r34pete/sdk
+          if [ -n "$SOCIAL_SDK_TOKEN" ]; then
+            curl -fsSL -H "Authorization: Bearer $SOCIAL_SDK_TOKEN" "$SOCIAL_SDK_URL" -o .r34pete/sdk/libdiscord_partner_sdk.so
+          else
+            curl -fsSL "$SOCIAL_SDK_URL" -o .r34pete/sdk/libdiscord_partner_sdk.so
+          fi
+          chmod 644 .r34pete/sdk/libdiscord_partner_sdk.so
+          echo "libreria del SDK descargada ($(stat -c %s .r34pete/sdk/libdiscord_partner_sdk.so) bytes)"
+
       - name: Hablar con Discord
         env:
           R34PETE_CONFIG: .r34pete/config.json
           R34PETE_INSTRUCCIONES: .r34pete/instrucciones.md
           MINUTOS: ${{ inputs.minutos || '300' }}
+          # Social SDK (bandeja de privados de Yuki). Si no hay nada de esto,
+          # el bot funciona igual y solo se apaga esa parte.
+          DISCORD_SOCIAL_APP_ID: ${{ secrets.DISCORD_SOCIAL_APP_ID }}
+          DISCORD_SOCIAL_ACCESS: ${{ secrets.DISCORD_SOCIAL_ACCESS }}
+          DISCORD_SOCIAL_REFRESH: ${{ secrets.DISCORD_SOCIAL_REFRESH }}
+          DISCORD_SOCIAL_EXPIRES: ${{ secrets.DISCORD_SOCIAL_EXPIRES }}
+          DISCORD_SOCIAL_SCOPES: ${{ secrets.DISCORD_SOCIAL_SCOPES }}
+          DISCORD_SDK_PATH: ${{ github.workspace }}/.r34pete/sdk
         run: |
           timeout --signal=TERM "${MINUTOS}m" node src/index.js &
           PID=$!

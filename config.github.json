@@ -87,5 +87,12 @@
     }
   ],
   "pendientesFile": ".r34pete/pendientes.json",
-  "conocimientoFile": ".r34pete/respuestas.json"
+  "conocimientoFile": ".r34pete/respuestas.json",
+  "social": {
+    "habilitado": true,
+    "appId": "",
+    "dueno": "586162707787546624",
+    "cadaMinutos": 3,
+    "archivo": ".r34pete/borradores.json"
+  }
 }

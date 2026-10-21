@@ -80,6 +80,15 @@ const POR_DEFECTO = {
   pendientesFile: "/var/lib/r34pete/pendientes.json",
   // Base de conocimiento: "si te preguntan X, responde Y".
   conocimientoFile: "/var/lib/r34pete/respuestas.json",
+  // Social SDK de Discord: lee la bandeja de privados de Yuki y deja las
+  // respuestas preparadas para mandarlas con /enviar.
+  social: {
+    habilitado: true,
+    appId: "", // lo pone el secreto DISCORD_SOCIAL_APP_ID
+    dueno: "", // id de usuario de Yuki (a quien se avisa de los borradores)
+    cadaMinutos: 3,
+    archivo: "/var/lib/r34pete/borradores.json",
+  },
   // Registro de lo ya publicado, para no repetir.
   vistosFile: "/var/lib/r34pete/vistos.json",
   logLevel: "info",
