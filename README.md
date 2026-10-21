@@ -34,6 +34,7 @@ Se prueban en orden y, si uno falla, se pasa al siguiente:
 | Backend | Clave | Notas |
 |---|---|---|
 | `ollama` | no | **Local** en la master: gratis, ilimitado, sin censura y rapidísimo (0,5 s). |
+| `opencode` | no | **Online y sin clave**: llama al CLI oficial de OpenCode para usar sus modelos `:free` (DeepSeek V4.1 Flash Free, MiniMax, Beam…). Ver «El backend `opencode`» más abajo. |
 | `pollinations` | no | **Online y sin clave**: 1 respuesta cada 30 s por IP. |
 | `gemini` | sí | Google AI Studio, tier gratis. |
 | `groq` | sí | console.groq.com, tier gratis y muy rápido. |
@@ -62,9 +63,34 @@ sudo systemctl restart r34pete
 
 En la nube (GitHub Actions) las claves llegan por secretos y el workflow las
  mete en `ia.claves`: `OPENROUTER_API_KEY`, `GEMINI_API_KEY` y `GROQ_API_KEY`.
-El orden ahí es `openrouter → pollinations → gemini → groq`: primero el router
-`openrouter/free` (que nunca cae a un modelo de pago) y, si su clave falla o se
-queda sin cuota, el resto de gratuitos.
+El orden ahí es el de `ia.orden` en `config.github.json`:
+`groq → opencode → pollinations → gemini → cerebras → nvidia → openrouter →
+mistral → cloudflare → horde → xai`. Primero `groq` (rápido, y sin cuota si
+trae clave), luego `opencode` (sin clave) y el resto de gratuitos; si uno falla,
+se salta al siguiente sin parar el bot.
+
+### El backend `opencode` (modelos `:free` sin cuenta ni tarjeta)
+
+Los modelos `:free` de OpenCode (`deepseek-v4.1-flash-free`,
+`minimax-m3.1-flash-free`, `beam-free`, `nemotron-3.5-lightning-free`,
+`nemotron-3-ultra-free`) son gratis y sin registro, pero su API por HTTP
+responde **403 FreeTierError** a todo lo que no venga de dentro del propio
+OpenCode. La única vía es el **CLI oficial**:
+`opencode run --model <modelo> "<pregunta>"`.
+
+Por eso el backend ejecuta el CLI y prueba los modelos **en orden**, hasta que
+uno conteste (cada uno con su propio cubo diario; si uno se queda sin cuota, cae
+al siguiente):
+
+| Configuración | Qué es |
+|---|---|
+| `ia.opencode_binario` | Ruta del cliente: `opencode` por defecto. |
+| `ia.opencode_modelo` | Lista de modelos separados por comas, en el orden en que se prueban. |
+| `ia.opencode_timeout_s` | Segundos de espera por modelo (180 por defecto). |
+
+En local: `npm install -g opencode-ai@1`. En GitHub Actions el workflow ya lo
+instala solo, y las pruebas de unidad (`probar-opencode.js`) comprueban que se
+cae al siguiente modelo y que el prompt se arma con el `system` y la pregunta.
 
 ### Comandos del chat
 
@@ -81,7 +107,8 @@ así que el chat mantiene el contexto.
 
 | Proveedor | Clave | Modelo por defecto | Para qué |
 |---|---|---|---|
-| **pollinations** | no (o clave *pollen*) | `openai-fast` (GPT-OSS 20B) | **La única sin cuenta.** 1 respuesta cada 30 s por IP; con clave pollen el límite sube. |
+| **pollinations** | no (o clave *pollen*) | `openai-fast` (GPT-OSS 20B) | **Sin cuenta.** 1 respuesta cada 30 s por IP; con clave pollen el límite sube. |
+| **opencode** | no | `opencode/deepseek-v4.1-flash-free` (con lista de respaldo) | **Sin cuenta y sin tarjeta**: usa el CLI oficial de OpenCode para sus modelos `:free` (DeepSeek V4.1 Flash Free, MiniMax, Beam…). Cada modelo con su cubo diario. |
 | **groq** | sí (gratis) | `llama-3.3-70b-versatile` | Muy rápida y sin censura. Registro en console.groq.com. |
 | **cerebras** | sí (gratis) | `llama-3.3-70b` | Muy rápida. cloud.cerebras.ai. |
 | **nvidia** | sí (gratis) | `nvidia/llama-3.1-nemotron-70b-instruct` | build.nvidia.com (NVIDIA NIM). |
@@ -159,6 +186,9 @@ falta tarjeta ni cuenta de nube. Workflow en `.github/workflows/r34pete.yml`:
 - Al arrancar, un paso prueba el backend de OpenRouter con la clave de la
   instancia y escribe en el log el modelo que sirvió de verdad
   (`probar-ia-openrouter.js`).
+- El workflow instala el CLI de OpenCode (`opencode-ai@1`) para poder usar sus
+  modelos `:free` sin clave, y pasa las pruebas de unidad antes de arrancar el
+  bot (si una falla, la sesión para ahí en vez de subir el bot roto).
 
 Puesta en marcha (una vez):
 
@@ -214,6 +244,10 @@ sudo nano /etc/r34pete/config.json    # campo "token"
 sudo systemctl restart r34pete
 sudo journalctl -u r34pete -f
 ```
+
+`install.sh` deja el bot instalado y además instala el cliente de OpenCode
+(`opencode-ai@1`) para poder usar sus modelos `:free` sin clave. Si ese paso
+falla, el bot arranca igual y usa el siguiente backend de IA.
 
 ### En Oracle Cloud (Always Free)
 

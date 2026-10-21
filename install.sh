@@ -65,6 +65,20 @@ if [ ! -f /var/lib/r34pete/respuestas.json ]; then
 fi
 chmod 640 "$CONF"
 
+echo "==> Cliente de OpenCode (modelos :free sin clave)"
+# Opcional: el backend "opencode" usa el CLI oficial para hablar con los
+# modelos :free de OpenCode. Si no se puede instalar, el bot sigue con el
+# siguiente backend de IA (no es un fallo de la instalacion).
+if command -v npm >/dev/null; then
+  if npm install -g opencode-ai@1 --no-fund --no-audit >/dev/null 2>&1; then
+    echo "opencode: $(opencode --version 2>/dev/null || echo instalado)"
+  else
+    echo "AVISO: no se pudo instalar el cliente de opencode (el bot usara otros backends)" >&2
+  fi
+else
+  echo "AVISO: sin npm no se instala el cliente de opencode (el bot usara otros backends)" >&2
+fi
+
 echo "==> Servicio"
 install -m 644 "$ORIGEN/r34pete.service" "$UNIDAD"
 systemctl daemon-reload
