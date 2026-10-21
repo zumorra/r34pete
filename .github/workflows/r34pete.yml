@@ -157,10 +157,11 @@ jobs:
             if [ -f .r34pete/vistos.json ] || [ -f .r34pete/pendientes.json ]; then
               git config user.name "r34pete"
               git config user.email "r34pete@users.noreply.github.com"
-              # OJO: 'git add' no tiene --ignore-unmatch (eso es de 'git rm');
-              # con esa opcion el add fallaba y el registro NUNCA se guardaba,
-              # asi que el bot repetia lo ya publicado en cada sesion.
-              git add .r34pete/vistos.json .r34pete/pendientes.json 2>/dev/null || true
+              # OJO: 'git add' NO tiene --ignore-unmatch (eso es de 'git rm'),
+              # y ademas con un pathspec que no existe (pendientes.json) el add
+              # falla ENTERO y no guarda nada. Por eso el bot repitia lo ya
+              # publicado en cada sesion. Ahora se anade el directorio entero.
+              git add -A .r34pete
               git diff --cached --quiet || git commit -q -m "registro de publicados" || true
               # main puede haber avanzado (cambios del repo): se rebasa antes de
               # subir; si el rebase no sale, se aborta y se salta este ciclo.
