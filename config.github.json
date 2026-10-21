@@ -94,5 +94,9 @@
     "dueno": "586162707787546624",
     "cadaMinutos": 3,
     "archivo": ".r34pete/borradores.json"
+  },
+  "telegram": {
+    "token": "",
+    "chatDueno": ""
   }
 }

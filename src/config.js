@@ -82,6 +82,11 @@ const POR_DEFECTO = {
   conocimientoFile: "/var/lib/r34pete/respuestas.json",
   // Social SDK de Discord: lee la bandeja de privados de Yuki y deja las
   // respuestas preparadas para mandarlas con /enviar.
+  // Telegram: el mismo cerebro donde si puede contestar de verdad solo.
+  telegram: {
+    token: "", // lo pone el secreto TELEGRAM_BOT_TOKEN
+    chatDueno: "", // id de chat de Yuki (para avisos)
+  },
   social: {
     habilitado: true,
     appId: "", // lo pone el secreto DISCORD_SOCIAL_APP_ID
@@ -129,6 +134,8 @@ function cargar(ruta = RUTA_POR_DEFECTO) {
   if (process.env.R34PETE_VISTOS_FILE) cfg.vistosFile = process.env.R34PETE_VISTOS_FILE;
   if (process.env.R34PETE_INSTRUCCIONES) cfg.chat.instrucciones = process.env.R34PETE_INSTRUCCIONES;
   if (process.env.R34PETE_CONOCIMIENTO) cfg.conocimientoFile = process.env.R34PETE_CONOCIMIENTO;
+  if (process.env.TELEGRAM_BOT_TOKEN) cfg.telegram.token = process.env.TELEGRAM_BOT_TOKEN;
+  if (process.env.TELEGRAM_CHAT_DUENO) cfg.telegram.chatDueno = process.env.TELEGRAM_CHAT_DUENO;
 
   if (!cfg.token) {
     throw new Error(

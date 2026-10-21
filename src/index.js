@@ -31,6 +31,7 @@ const { Instrucciones } = require("./instrucciones");
 const { Conocimiento } = require("./conocimiento");
 const { Social } = require("../social/social");
 const { Borradores } = require("../social/borradores");
+const { Telegram } = require("../telegram/telegram");
 const { Pendientes } = require("./pendientes");
 const { Historial } = require("./historial");
 const ia = require("./ia");
@@ -65,6 +66,8 @@ cliente.conocimiento = new Conocimiento(cfg.conocimientoFile);
 // Social SDK: lee la bandeja de privados de Yuki y prepara respuestas.
 cliente.social = new Social(cfg.social || {});
 cliente.borradores = new Borradores((cfg.social || {}).archivo || "/var/lib/r34pete/borradores.json");
+// Telegram: el mismo cerebro en otro canal, donde si puede contestar solo.
+cliente.telegram = new Telegram({ iaCfg: cfg.ia, maxHistorial: cfg.chat.maximo_historial });
 cliente.pendientes = new Pendientes(cfg.pendientesFile);
 cliente.historial = new Historial(cfg.chat.maximo_historial);
 cliente.iaCfg = cfg.ia;
@@ -423,6 +426,12 @@ cliente.once("ready", async () => {
   if ((cfg.social || {}).habilitado) {
     bucleSocial().catch((e) => console.warn(`[social] el bucle se ha parado: ${e.message}`));
   }
+  cliente.telegram.conCerebro({
+    instrucciones: cliente.instrucciones,
+    conocimiento: cliente.conocimiento,
+    iaCfg: cfg.ia,
+  });
+  cliente.telegram.escuchar().catch((e) => console.warn(`[telegram] el bucle se ha parado: ${e.message}`));
   console.log(`R34pete conectado como ${cliente.user.tag}`);
   cliente.feeds.cargarDesdeConfig(leerFeeds());
   await registrarComandos();

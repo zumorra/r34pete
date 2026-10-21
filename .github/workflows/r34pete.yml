@@ -140,6 +140,8 @@ jobs:
           DISCORD_SOCIAL_EXPIRES: ${{ secrets.DISCORD_SOCIAL_EXPIRES }}
           DISCORD_SOCIAL_SCOPES: ${{ secrets.DISCORD_SOCIAL_SCOPES }}
           DISCORD_SDK_PATH: ${{ github.workspace }}/.r34pete/sdk
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_DUENO: ${{ secrets.TELEGRAM_CHAT_DUENO }}
         run: |
           timeout --signal=TERM "${MINUTOS}m" node src/index.js &
           PID=$!
