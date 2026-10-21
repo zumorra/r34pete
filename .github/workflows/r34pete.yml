@@ -91,8 +91,10 @@ jobs:
           chmod 600 .r34pete/config.json
           cp instrucciones.md .r34pete/instrucciones.md
           cp respuestas.json .r34pete/respuestas.json
-          # Semilla del registro de "ya publicado" (evita repetir al reiniciar).
-          if [ -f vistos.json ]; then cp vistos.json .r34pete/vistos.json; fi
+          # El registro de "ya publicado" viene del propio repo
+          # (.r34pete/vistos.json, lo commitea el bot). NO se pisa con una
+          # copia vieja: eso hacia que el bot olvidase lo ya publicado y
+          # repitiera contenido en cada sesion.
           echo "token: $([ -n "$DISCORD_TOKEN" ] && echo puesto || echo FALTA)"
           echo "rule34: $([ -n "$RULE34_API_KEY" ] && echo con clave || echo sin clave)"
           echo "openrouter: $([ -n "$OPENROUTER_API_KEY" ] && echo con clave || echo SIN clave)"

@@ -81,7 +81,7 @@ class Feed {
     let probadas = 0;
     let restantes = 0;
     const candidatos = [];
-    for (let salto = 0; salto < 8 && candidatos.length < 10; salto++) {
+    for (let salto = 0; salto < 16 && candidatos.length < 10; salto++) {
       const pagina = this.pagina + salto;
       const resultados = await proveedores.buscar(
         this.cliente.cfg,
@@ -93,7 +93,11 @@ class Feed {
       );
       if (!resultados.length) continue;
       probadas++;
-      const nuevos = vistos ? vistos.sinVer(this.proveedor, resultados, this.id) : resultados;
+      // Se miran TODAS las claves del proveedor (medio y id del feed):
+      // si no, el feed repetiria lo que ya publico /buscar.
+      const nuevos = vistos
+        ? vistos.sinVer(this.proveedor, resultados, this.medio, this.id)
+        : resultados;
       restantes += resultados.length - nuevos.length;
       // Si esta pagina esta toda vista, se prueba la siguiente en vez de
       // repetir: repetir solo pasa si no queda nada nuevo en ninguna pagina.
@@ -119,9 +123,19 @@ class Feed {
         console.warn(`[feed ${this.id}] no hay resultados en ${this.proveedor}`);
         return;
       }
+      // No queda nada nuevo en ninguna pagina: se repite el que mas tiempo
+      // lleva sin publicarse (el mas antiguo del registro), no siempre el
+      // primero, para que la repeticion sea la mas espaciada posible.
+      if (vistos) {
+        const antiguedad = (post) => {
+          const p = vistos.posicionDe(this.proveedor, vistos.idDe(post), this.medio, this.id);
+          return p < 0 ? Number.MAX_SAFE_INTEGER : p;
+        };
+        resultados.sort((a, b) => antiguedad(a) - antiguedad(b));
+      }
       candidatos.push(resultados[0]);
       console.warn(
-        `[feed ${this.id}] no queda nada nuevo (${restantes} ya vistos): se repetira uno`
+        `[feed ${this.id}] no queda nada nuevo (${restantes} ya vistos): se repetira el mas antiguo (id ${resultados[0].id})`
       );
     }
 
@@ -139,7 +153,7 @@ class Feed {
     }
     const elegidoPost = descargado.post;
     const buffer = descargado.buffer;
-    if (vistos) vistos.marcar(this.proveedor, [elegidoPost.id], this.id);
+    if (vistos) vistos.marcar(this.proveedor, [elegidoPost.id], this.medio, this.id);
     const embed = new EmbedBuilder()
       .setColor(0x9b30ff)
       .setTitle("Feed")
