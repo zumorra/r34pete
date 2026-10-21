@@ -16,6 +16,7 @@ const path = require("node:path");
 const {
   Client,
   GatewayIntentBits,
+  Partials,
   EmbedBuilder,
   PermissionFlagsBits,
   ChannelType,
@@ -34,10 +35,20 @@ const guard = require("./guard");
 
 const cfg = cargar();
 const cliente = new Client({
-  // Sin intents privilegiados: el bot no lee mensajes ni necesita la lista
-  // de miembros (el chequeo de rol se pide a la API cuando hace falta).
-  // Asi el bot no necesita revision de intents al pasar de 10.000 usuarios.
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
+  // Sin intents privilegiados de los que Discord revisa (no pedimos la lista de
+  // miembros: el chequeo de rol se pide a la API cuando hace falta), asi el
+  // bot no necesita revision de intents al pasar de 10.000 usuarios. El de
+  // contenido de mensajes SI esta activado en el portal: es lo que permite
+  // leer el texto de los DMs.
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.DirectMessages,
+  ],
+  // Imprescindible para los DMs: un mensaje de alguien que no esta en el cache
+  // llega como "partial" y SIN texto; con esto se puede pedir al gateway el
+  // mensaje completo (es lo que hace el bot de referencia de GitHub).
+  partials: [Partials.Message, Partials.Channel, Partials.Reaction],
 });
 cliente.cfg = cfg;
 cliente.feeds = new GestorFeeds(cliente);
@@ -149,6 +160,16 @@ async function manejarChat(mensaje) {
   if (!cfg.chat.habilitado) return;
   if (mensaje.author.bot && !cfg.chat.responder_a_bots) return;
   if (cliente.user && mensaje.author.id === cliente.user.id) return;
+  // Un DM de alguien que no esta en el cache llega como mensaje parcial y SIN
+  // texto: hay que pedirlo al gateway para poder leerlo.
+  if (mensaje.partial) {
+    try {
+      mensaje = await mensaje.fetch();
+    } catch (e) {
+      console.warn(`[chat] no se pudo completar el mensaje parcial: ${e.message}`);
+      return;
+    }
+  }
   if (!mensaje.content || !mensaje.content.trim()) return;
 
   // Privado (1 a 1), grupo de MDs o el canal que se haya autorizado.
@@ -197,15 +218,8 @@ async function manejarChat(mensaje) {
 
   try {
     await mensaje.channel.sendTyping().catch(() => {});
-    const historial = cliente.historial.ultimos(mensaje.author.id);
-    const mensajes = [
-      { role: "system", content: cliente.instrucciones.actual() },
-      ...historial,
-      { role: "user", content: texto },
-    ];
-    const r = await ia.responder(cliente.iaCfg, mensajes);
-    cliente.historial.anadir(mensaje.author.id, "user", texto);
-    cliente.historial.anadir(mensaje.author.id, "assistant", r.texto);
+    const r = await responderConIA(mensaje.author.id, texto);
+    if (!r) return;
     console.log(`[chat] ${mensaje.author.tag} en ${mensaje.channel.type === ChannelType.DM ? "DM" : mensaje.channel.name}: ${r.backend}/${r.modelo}`);
     await enviarPartido(mensaje, r.texto);
     return r.texto;
@@ -215,6 +229,23 @@ async function manejarChat(mensaje) {
       .reply("Ahora mismo no puedo responder (se acabo la cuota o la IA no responde). Intentalo en un momento.")
       .catch(() => {});
   }
+}
+
+/**
+ * Pide una respuesta a la IA con el contexto del usuario y la guarda en el
+ * historial. La usan tanto los DMs automaticos como el comando /chat.
+ */
+async function responderConIA(usuarioId, texto) {
+  const historial = cliente.historial.ultimos(usuarioId);
+  const mensajes = [
+    { role: "system", content: cliente.instrucciones.actual() },
+    ...historial,
+    { role: "user", content: texto },
+  ];
+  const r = await ia.responder(cliente.iaCfg, mensajes);
+  cliente.historial.anadir(usuarioId, "user", texto);
+  cliente.historial.anadir(usuarioId, "assistant", r.texto);
+  return r;
 }
 
 /** Envia un texto largo partido en trozos que quepan en un mensaje. */
@@ -242,6 +273,7 @@ cliente.on("interactionCreate", async (interaccion) => {
     if (interaccion.commandName === "instrucciones") return await cmdInstrucciones(interaccion);
     if (interaccion.commandName === "ia") return await cmdIa(interaccion);
     if (interaccion.commandName === "olvidar") return await cmdOlvidar(interaccion);
+    if (interaccion.commandName === "chat") return await cmdChat(interaccion);
     if (interaccion.commandName === "estado") return await cmdEstado(interaccion);
     if (interaccion.commandName === "ayuda") return await cmdAyuda(interaccion);
   } catch (e) {
@@ -427,6 +459,31 @@ async function cmdFeed(interaccion) {
     return respuestaEphemeral(
       interaccion,
       ok ? `Feed **${id}** borrado.` : `No hay ningun feed con id **${id}**.`
+    );
+  }
+}
+
+async function cmdChat(interaccion) {
+  const texto = (interaccion.options.getString("mensaje") || "").trim();
+  if (!texto) return respuestaEphemeral(interaccion, "Escribeme algo.");
+  try {
+    guard.revisarTexto(texto);
+  } catch (e) {
+    return respuestaEphemeral(interaccion, e.message);
+  }
+  await interaccion.deferReply({ ephemeral: false });
+  try {
+    const r = await responderConIA(interaccion.user.id, texto);
+    console.log(`[chat] /chat de ${interaccion.user.tag}: ${r.backend}/${r.modelo}`);
+    const trozos = String(r.texto).match(/[\s\S]{1,1900}/g) || [r.texto];
+    for (const trozo of trozos) {
+      await interaccion.followUp(trozo);
+      await new Promise((x) => setTimeout(x, 250));
+    }
+  } catch (e) {
+    console.error(`[chat] /chat fallo: ${e.message}`);
+    await interaccion.editReply(
+      "Ahora mismo no puedo responder (se acabo la cuota o la IA no responde). Intentalo en un momento."
     );
   }
 }

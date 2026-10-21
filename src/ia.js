@@ -136,11 +136,7 @@ async function gemini(cfg, mensajes) {
 }
 
 // --------------------------------------------------------------- openai-like
-function cuerpoModelo(modelo, esOpenRouter) {
-  // El array "models" es SOLO de OpenRouter (respaldo automatico). Los demas
-  // proveedores (groq, cerebras, nvidia, mistral, xai) esperan un unico "model":
-  // si se les mandara "models" se quedarian sin modelo y fallarian.
-  if (!esOpenRouter) return { model: modelo };
+function cuerpoModelo(modelo) {
   // "a,b,c" es una lista de respaldo de OpenRouter; un solo nombre va en "model".
   const lista = String(modelo).split(",").map((s) => s.trim()).filter(Boolean);
   return lista.length > 1 ? { models: lista } : { model: lista[0] ?? modelo };
@@ -159,7 +155,7 @@ async function compatible(cfg, mensajes, nombre, url, modelo) {
         : {}),
     },
     body: JSON.stringify({
-      ...cuerpoModelo(modelo, nombre === "openrouter"),
+      ...cuerpoModelo(modelo),
       messages: mensajes,
       max_tokens: cfg.max_tokens ?? 400,
       temperature: cfg.temperatura ?? 0.85,

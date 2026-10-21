@@ -89,6 +89,13 @@ const COMANDOS = [
     ),
 
   new SlashCommandBuilder()
+    .setName("chat")
+    .setDescription("Escribe al bot y te contesta (sirve en privado).")
+    .addStringOption((o) =>
+      o.setName("mensaje").setDescription("Lo que quieres que te diga.").setRequired(true)
+    ),
+
+  new SlashCommandBuilder()
     .setName("instrucciones")
     .setDescription("Muestra las instrucciones que sigue el bot para responder."),
   new SlashCommandBuilder()
