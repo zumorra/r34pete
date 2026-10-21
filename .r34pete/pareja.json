@@ -1,0 +1,532 @@
+{
+  "_comentario": "Guia para parejas de R34pete: recetas para cocinar juntos, consejos, juegos y planes. Edita este fichero a tu gusto; el bot lo relee solo cuando lo guardas (sin reiniciar). 'nivel' va de 1 (suave) a 5 (muy picante): el bot solo muestra lo que es menor o igual al nivel que tiene el servidor. Todos los consejos y juegos son para adultos que se quieren y se hablan: el consentimiento se pide SIEMPRE y se puede retirar en cualquier momento.",
+  "niveles": {
+    "1": "Suave: ternura, comida, contacto y palabras bonitas. Nada que haga falta esconderse.",
+    "2": "Mmmmm: picante suave, masajitos, el cuerpo empieza a despertar.",
+    "3": "Ardiente: picante de verdad, juegos con palabra de seguridad y mucho contacto.",
+    "4": "Picante alto: la cocina se vuelve juego y el juego se vuelve cocina. Despacio y hablando.",
+    "5": "Fuego: para los que ya se conocen de memoria y saben exactamente lo que les gusta. Siempre con la palabra."
+  },
+  "recetas": [
+    {
+      "id": "chocolate-caliente-dos",
+      "titulo": "Chocolate caliente de dos",
+      "nivel": 2,
+      "tiempo": "15 min",
+      "para": "2 tazas",
+      "etiquetas": ["dulce", "bebida", "invierno", "picante-suave"],
+      "ingredientes": [
+        "200 ml de leche entera",
+        "100 g de chocolate 70 % troceado",
+        "1 pizca de cayena (o una gota de chile suave)",
+        "1 cucharadita de cacao en polvo",
+        "1 pizca de canela",
+        "2 cucharadas de nata o leche de avena"
+      ],
+      "pasos": [
+        "Calienta la leche a fuego bajo hasta que humee, sin que hierva.",
+        "Retírala del fuego y añade el chocolate troceado: se va derritiendo solo.",
+        "Remueve con una cuchara hasta que quede una crema lisa.",
+        "Ahora sí: cayena, cacao y canela. Prueba y decidid si queréis más.",
+        "Servid en dos tazas y tomadlo despacio, mientras os miráis."
+      ],
+      "truco": "El picante va siempre DESPUÉS del chocolate: si lo echas antes, la mezcla se corta y queda aguada."
+    },
+    {
+      "id": "fresas-balsamico",
+      "titulo": "Fresas con balsamic y miel",
+      "nivel": 1,
+      "tiempo": "10 min",
+      "para": "2",
+      "etiquetas": ["dulce", "verano", "postre", "rapido"],
+      "ingredientes": [
+        "250 g de fresas",
+        "2 cucharadas de vinagre balsámico",
+        "1 cucharada de miel",
+        "menta fresca",
+        "una pizca de sal"
+      ],
+      "pasos": [
+        "Lava las fresas y córtalas por la mitad.",
+        "Mézclalas con el vinagre y la miel.",
+        "Déjalas 5 minutos: el balsamic se vuelve jarabe y las fresas se ablandan.",
+        "Añade la menta y la pizca de sal para cortar el dulzor.",
+        "Comedlas del uno al otro, con los dedos, sin prisa."
+      ],
+      "truco": "La miel amortigua el ácido del balsamic. Si te parece ácido, echa otra cucharadita de miel."
+    },
+    {
+      "id": "huevos-picantes-aguacate",
+      "titulo": "Huevos con chile y aguacate",
+      "nivel": 2,
+      "tiempo": "20 min",
+      "para": "2",
+      "etiquetas": ["desayuno", "picante-suave", "rapido"],
+      "ingredientes": [
+        "4 huevos",
+        "1 aguacate maduro",
+        "1/2 chile fresno o 1/2 cdta de pimentón picante",
+        "sal, pimienta y cilantro",
+        "zumo de limón"
+      ],
+      "pasos": [
+        "Cuece los huevos 9 minutos y pásalos por agua fría.",
+        "Pélalos, córtalos por la mitad y mézclalos con el aguacate machacado.",
+        "Añade el chile picado o el pimentón, la sal, la pimienta y un toque de limón.",
+        "Prueba: aquí es donde decidís vosotros cuánto picante.",
+        "Servid en un bol y comedlos hablando de lo que vais a hacer después."
+      ],
+      "truco": "El chile entero y triturado sube poco a poco; picado y de golpe pega más. Empezad con poca cantidad."
+    },
+    {
+      "id": "pasta-ajo-chile",
+      "titulo": "Pasta con ajo, aceite y chile",
+      "nivel": 3,
+      "tiempo": "20 min",
+      "para": "2",
+      "etiquetas": ["picante", "principal", "barato", "rapido"],
+      "ingredientes": [
+        "200 g de pasta",
+        "4 dientes de ajo laminados",
+        "80 ml de aceite de oliva virgen extra",
+        "1/2 chile de árbol seco (o 1 cdta de copos de chile)",
+        "sal, perejil y queso rallado",
+        "un poco del agua de cocción de la pasta"
+      ],
+      "pasos": [
+        "Pon la pasta a cocer y sala el agua.",
+        "En una sartén baja, dora el ajo con el aceite hasta que esté dorado (que no se queme: se amarga).",
+        "Añade el chile y apaga el fuego: el aceite se lleva todo el sabor.",
+        "Escurre la pasta reserving un vaso del agua de cocción.",
+        "Saltea la pasta en el ajo con un chorrito del agua hasta que quede brillante.",
+        "Perejil, queso y a la mesa. Los dos comiendo del mismo plato."
+      ],
+      "truco": "El ajo dorado está en 3 minutos y quemado en 4. Ponle un temporizador y salva la cena."
+    },
+    {
+      "id": "camarones-pimenton",
+      "titulo": "Camarones al pimentón con ajo",
+      "nivel": 3,
+      "tiempo": "15 min",
+      "para": "2",
+      "etiquetas": ["picante", "mar", "rapido", "proteina"],
+      "ingredientes": [
+        "300 g de camarones pelados",
+        "2 dientes de ajo",
+        "1 cdta de pimentón dulce o picante",
+        "1/4 cdta de pimentón picante (al gusto)",
+        "aceite de oliva, sal y perejil",
+        "1 guindilla fresca opcional"
+      ],
+      "pasos": [
+        "Seca bien los camarones con papel de cocina: con agua sueltan y no doran.",
+        "Dora el ajo en una sartén con aceite.",
+        "Sube el fuego, echa los camarones y saltéalos 1 minuto por cada lado.",
+        "Fuera del fuego, añade los pimentones y remueve rápido (si los quemas, amarga).",
+        "Sal, perejil y, si quieres, la guindilla troceada encima.",
+        "Ahora la parte importante: comed del mismo cuenco, con las manos."
+      ],
+      "truco": "Sazona los camarones ANTES de la sartén: el salitrillo saca el agua y doran mejor."
+    },
+    {
+      "id": "ostras-miel-limon",
+      "titulo": "Ostras con miel y limón",
+      "nivel": 3,
+      "tiempo": "15 min",
+      "para": "2",
+      "etiquetas": ["mar", "picante", "especial", "lujo"],
+      "ingredientes": [
+        "6 ostras frescas",
+        "1 cdta de miel",
+        "zumo de 1/2 limón",
+        "una gota de tabasco o chile suave",
+        "hielo para la cubitera"
+      ],
+      "pasos": [
+        "Pon las ostras sobre hielo y ábrelas con un paño, en la parte plana, haciendo palanca en la bisagra.",
+        "Mezcla la miel con el limón y el picante.",
+        "Sirve las ostras crudas con la salsa al lado.",
+        "Cada uno sirve al otro: le das la ostra con la mano y el otro decide el picante.",
+        "Y si se cae una al suelo, no pasa nada: se limpia y se sigue."
+      ],
+      "truco": "Se abren con el paño en la parte plana (la más ancha), nunca por la punta: se rompen."
+    },
+    {
+      "id": "higos-queso-miel",
+      "titulo": "Higos con queso azul y miel",
+      "nivel": 2,
+      "tiempo": "10 min",
+      "para": "2",
+      "etiquetas": ["dulce", "postre", "barato", "rapido"],
+      "ingredientes": [
+        "6 higos frescos maduros",
+        "80 g de queso azul",
+        "1 cucharada de miel",
+        "nueces o avellanas",
+        "hojas de menta"
+      ],
+      "pasos": [
+        "Parte los higos por la mitad sin llegar a separarlos del todo.",
+        "Pon el queso azul en cada mitad, como si fueran barquitas.",
+        "Riega con la miel y reparte los frutos secos.",
+        "Añade la menta y servidlo templado (10 segundos en el microondas si sois impacientes).",
+        "Cada mitad para un comensal: los coméis del mismo higo o os lo prestáis."
+      ],
+      "truco": "El queso azul y el higo marinan de maravilla. Si no hay higos, usa peras o manzanas asadas."
+    },
+    {
+      "id": "arroz-azafran",
+      "titulo": "Arroz con azafrán y miel",
+      "nivel": 2,
+      "tiempo": "35 min",
+      "para": "2",
+      "etiquetas": ["principal", "dulce", "especial"],
+      "ingredientes": [
+        "200 g de arroz bomba o redondo",
+        "2 pizcas de azafrán (o colorante de azafrán)",
+        "1 cebolla pequeña picada fina",
+        "1 cdta de miel o sirope de arce",
+        "aceite de oliva, sal y un poco de zumo de naranja",
+        "caldo caliente"
+      ],
+      "pasos": [
+        "Sofríe la cebolla en aceite hasta que esté transparente, sin dorarse.",
+        "Añade el azafrán y remueve: el arroz se vuelve naranja y huele increíble.",
+        "Echa el arroz y rehoga 2 minutos para que cada grano se empape.",
+        "Añade el caldo caliente a razón de 1 parte de arroz por 2,5 de caldo, con sal.",
+        "Cocina 18 minutos tapado y sin tocarlo, y luego 5 minutos de reposo.",
+        "Termina con la miel y el zumo de naranja: el contraste dulce-salado es lo que engancha."
+      ],
+      "truco": "La miel entra AL FINAL. Si va con el caldo, se carameliza y amarga."
+    },
+    {
+      "id": "pizza-casera",
+      "titulo": "Pizza casera (para amasar juntos)",
+      "nivel": 2,
+      "tiempo": "45 min + 24 h de masa",
+      "para": "2",
+      "etiquetas": ["juntos", "clasico", "proyecto"],
+      "ingredientes": [
+        "300 g de harina",
+        "200 ml de agua templada",
+        "3 g de levadura seca (1 cdta si es fresca)",
+        "1 cdta de sal",
+        "1 cdta de aceite",
+        "salsa de tomate, mozzarella, albahaca o lo que os guste"
+      ],
+      "pasos": [
+        "Mezcla harina, agua, levadura y sal hasta que no quede harina suelta. Amasa 10 minutos.",
+        "Déjala tapada 24 horas en la nevera (o 2 horas en un sitio templado si vais con prisa).",
+        "Estira la masa con las manos, sin rodillo, dejándola fina por el borde.",
+        "Salsa, queso, y al horno a 250 °C, el máximo posible, hasta que el borde esté tostado.",
+        "Repartid la pizza en porciones iguales y no se os ocurra cortarla con cutter."
+      ],
+      "truco": "La masa mejora con un día. Si queréis pizza esta noche, comprad la base ya hecha y centrad la atención en los toppings."
+    },
+    {
+      "id": "mole-chocolate-chile",
+      "titulo": "Mole de chocolate con chile",
+      "nivel": 4,
+      "tiempo": "1 h",
+      "para": "4 (sobra para la cena del día siguiente)",
+      "etiquetas": ["picante", "especial", "imprescindible", "semana"],
+      "ingredientes": [
+        "2 chiles anchos secos",
+        "1 canela, 1 clavo y un poco de cardamomo",
+        "50 g de chocolate 70 %",
+        "1/2 taza de cacao en polvo",
+        "1 cebolla grande",
+        "2 tomates maduros o 1 lata",
+        "1 taza de caldo de pollo",
+        "1 cdta de miel o de piña"
+      ],
+      "pasos": [
+        "Tuesta los chiles y las especias 30 segundos y muélelos en polvo fino.",
+        "Sofríe la cebolla hasta que esté muy blanda, casi caramelizada.",
+        "Añade el tomate y deja que se reduzca 10 minutos.",
+        "Echa el polvo de chiles y las especias: saltea 1 minuto, solo hasta que huele.",
+        "Agrega el caldo y el cacao, cuece 15 minutos a fuego bajo.",
+        "Fuera del fuego, añade el chocolate troceado y remueve hasta que quede una crema brillante.",
+        "Sirve con arroz o tortilla. Los dos a la vez, con la cuchara en la mano del otro."
+      ],
+      "truco": "Si te parece demasiado picante, añade más cacao: el cacao amargo tapa el picante mucho mejor que la leche."
+    },
+    {
+      "id": "wok-agridulce",
+      "titulo": "Verduras al wok con salsa agridulce",
+      "nivel": 3,
+      "tiempo": "25 min",
+      "para": "2",
+      "etiquetas": ["picante", "juntos", "vegetariano", "rapido"],
+      "ingredientes": [
+        "1 pimiento rojo y 1 verde",
+        "2 zanahorias en tiras",
+        "200 g de garbanzos cocidos (o pollo en tiras)",
+        "2 dientes de ajo",
+        "2 cucharadas de salsa de soja",
+        "1 cdta de vinagre, 1 cdta de miel y 1/2 cdta de chile en polvo",
+        "1 cdta de maicena en un chorrito de agua"
+      ],
+      "pasos": [
+        "Mezcla la salsa: soja, vinagre, miel y chile.",
+        "Calienta el wok a tope: si no humea, no es un wok.",
+        "Saltea primero el ajo (10 segundos) y luego las verduras duras (zanahoria, pimiento) 2 minutos.",
+        "Añade el pollo o los garbanzos y saltea 3 minutos más.",
+        "Vuelca la salsa y remueve 30 segundos: el almidón la hace brillar y agarrar.",
+        "Sirve y comedlo con palillos, que son medio juego."
+      ],
+      "truco": "No cojas las verduras hasta que estén al dente: si el wok está a tope, en 2 minutos ya están."
+    },
+    {
+      "id": "crema-pistacho",
+      "titulo": "Crema de pistacho para los dos",
+      "nivel": 2,
+      "tiempo": "15 min",
+      "para": "2",
+      "etiquetas": ["dulce", "postre", "verde", "rapido"],
+      "ingredientes": [
+        "100 g de pasta de pistacho (o pistachos tostados)",
+        "300 ml de nata para montar",
+        "80 g de azúcar",
+        "1 pizca de sal",
+        "aceite de oliva para dar sabor",
+        "hojas de menta"
+      ],
+      "pasos": [
+        "Tuesta los pistachos 5 minutos y tritúralos hasta que sean pasta.",
+        "Mézclalos con el azúcar y la sal.",
+        "Bate la nata a punto y añádela a la pasta: se hace al revés para que no corte.",
+        "Una pizca de aceite de oliva: es lo que da el sabor de pistacho de verdad.",
+        "Repartid en dos vasos y enfriad 20 minutos antes de probarlos."
+      ],
+      "truco": "El aceite de oliva es el truco del pistacho. Sin él sabe a crema de cacahuete verde."
+    }
+  ],
+  "consejos": [
+    {
+      "id": "palabra-de-hoy",
+      "titulo": "La palabra de hoy",
+      "nivel": 1,
+      "etiquetas": ["comunicacion", "regla"],
+      "texto": "Elegid una palabra que signifique \"alto\" (lo típico es \"coche rojo\"). La decís si queréis parar, y para en seco, sin discutir. Lo dicho con la palabra de hoy NO cuenta después: no es deuda ni reproche."
+    },
+    {
+      "id": "regla-del-si",
+      "titulo": "Regla del \"sí, sigue\"",
+      "nivel": 1,
+      "etiquetas": ["comunicacion", "regla"],
+      "texto": "Si alguien dice \"sí, sigue\" o \"más\", eso es permiso para continuar. El silencio no es un sí: si no sabéis, preguntad. Preguntar no rompe el momento, lo hace más intenso."
+    },
+    {
+      "id": "lo-que-no-se-habla",
+      "titulo": "Lo que no se habla no se puede",
+      "nivel": 1,
+      "etiquetas": ["comunicacion", "confianza"],
+      "texto": "El 80 % de los problemas no son de deseo, son de información: nadie sabe qué le gusta a la otra persona hasta que se lo dice. Un \"¿qué te ha gustado más?\" al final de la noche vale más que un libro."
+    },
+    {
+      "id": "mirada-60",
+      "titulo": "Sesenta segundos de mirada",
+      "nivel": 1,
+      "etiquetas": ["sin-palabras", "intenso", "rapido"],
+      "texto": "Siéntense frente a frente, a 30 cm, y mírense un minuto entero sin hablar ni tocar. Cuando acaba el minuto, decidís quién empieza. Funciona mejor de lo que parece y sube la tensión más que cualquier discusión."
+    },
+    {
+      "id": "baile-sin-musica",
+      "titulo": "Baile sin música",
+      "nivel": 2,
+      "etiquetas": ["movimiento", "juntos"],
+      "texto": "Poned música o no, pero bailad: el que guía elige el ritmo y la otra persona sigue. Sin música cuesta más, y eso es exactamente el punto."
+    },
+    {
+      "id": "masaje-manos",
+      "titulo": "Masaje de manos",
+      "nivel": 1,
+      "etiquetas": ["contacto", "suave", "rapido"],
+      "texto": "Diez minutos de manos, con aceite, sin prisa y sin hablar del cuerpo: dedos, muñecas, la palma. Es de los gestos más efectivos que existen y se puede hacer en la mesa, en el sofá, en el metro."
+    },
+    {
+      "id": "mapa-zonas",
+      "titulo": "Mapa de zonas de hoy",
+      "nivel": 3,
+      "etiquetas": ["acuerdo", "limites", "comunicacion"],
+      "texto": "Antes de empezar, cada uno dice en voz alta tres zonas del cuerpo donde NO quiere nada hoy y una donde sí le apetece. Se anota en un papel, se tira, y esa es la lista. Cambia cada día: por eso funciona."
+    },
+    {
+      "id": "comida-a-oscuras",
+      "titulo": "Comida a oscuras",
+      "nivel": 2,
+      "etiquetas": ["sensorial", "juego", "picante"],
+      "texto": "Comed con los ojos cerrados, alimentándoos el uno al otro, sin saber qué es qué. Con chocolate, miel, fruta y un poco de picante se convierte en un juego que no se parece a nada."
+    },
+    {
+      "id": "notas-anonimas",
+      "titulo": "Notas anónimas",
+      "nivel": 2,
+      "etiquetas": ["comunicacion", "privado"],
+      "texto": "Escribid en un papel tres cosas que os gustaría que la otra persona hiciese esta semana. Sin firmas. Se leen a la vez, en silencio. Lo que hay en ese papel se cumple, aunque sea pequeño: eso es lo que hace que se convierta en costumbre."
+    },
+    {
+      "id": "despues",
+      "titulo": "Cuidarse después",
+      "nivel": 1,
+      "etiquetas": ["despues", "carino", "importante"],
+      "texto": "El mejor momento de la noche no es el clímax: es el después. Agua, un abrazo de dos minutos, decir en voz alta qué ha estado bien. Sin eso, lo bueno se olvida y lo malo se recuerda."
+    },
+    {
+      "id": "filtro-del-dia",
+      "titulo": "El filtro de cinco minutos",
+      "nivel": 2,
+      "etiquetas": ["filtro", "suave"],
+      "texto": "En mitad de la noche, cada uno se toma cinco minutos para respirar y decir: \"¿sigues queriendo esto o necesitas un respiro?\". Si la respuesta es \"respiro\", se pausa todo y se vuelve al punto de partida, sin drama."
+    },
+    {
+      "id": "ritual-10",
+      "titulo": "Ritual de los diez minutos",
+      "nivel": 2,
+      "etiquetas": ["rutina", "diario"],
+      "texto": "Diez minutos cada día, aunque no haya nada especial: un café juntos, un mensaje, una pregunta sobre el día. Lo que se hace a diario sube la temperatura más que lo que se hace una vez al mes."
+    },
+    {
+      "id": "palabras-vuestras",
+      "titulo": "Palabras vuestras, no de porno",
+      "nivel": 3,
+      "etiquetas": ["palabras", "intimo"],
+      "texto": "Los nombres que usáis entre vosotros (el apodo, el mote) valen más que cualquier palabra de porno: son un lenguaje que solo existe entre los dos. Usadlos. Inventad uno nuevo cada mes."
+    },
+    {
+      "id": "trampa-del-placer",
+      "titulo": "La trampa del placer",
+      "nivel": 4,
+      "etiquetas": ["avanzado", "control"],
+      "texto": "Uno de los dos manda y el otro obedece durante 15 minutos, dentro de lo que se haya acordado. Se para en seco cuando se acaba el tiempo, sin negociar. El poder temporal es lo que enciende a mucha gente: se sabe que acaba."
+    }
+  ],
+  "juegos": [
+    {
+      "id": "ruleta-picante",
+      "titulo": "Ruleta de picante",
+      "nivel": 3,
+      "tiempo": "15 min",
+      "etiquetas": ["picante", "azar", "diversion"],
+      "materiales": ["Un dado o una app de dados", "5 tarjetas con acciones"],
+      "como": "Escribid 5 acciones en tarjetas: beso de 10 segundos, caricia donde el otro elija, un trago de la copa del otro, una frase al oído, un minuto de manos. Se saca una y se hace. La más picante es la que más risa da: no juzguéis."
+    },
+    {
+      "id": "cata-a-ciegas",
+      "titulo": "Cata a ciegas",
+      "nivel": 2,
+      "tiempo": "20 min",
+      "etiquetas": ["sensorial", "comida"],
+      "materiales": ["5 ingredientes pequeños", "tapas o vasos para tapar los ojos", "agua y picatostes"],
+      "como": "Cinco cosas pequeñas: miel, chocolate, limón, ajo, chile, aceitunas... Cada quien con los ojos tapados prueba y adivina. Y después, ¿probarlo el uno al otro?"
+    },
+    {
+      "id": "reto-cinco-minutos",
+      "titulo": "Reto de cinco minutos",
+      "nivel": 3,
+      "tiempo": "5 min",
+      "etiquetas": ["reto", "rapido", "diversion"],
+      "materiales": ["Nada"],
+      "como": "Al móvil, una cuenta atrás de 5 minutos. En ese tiempo, solo besos y manos, sin hablar. Al terminar, cada uno dice una cosa que ha sentido. Repetid el juego con variaciones: con música, a oscuras, en el pasillo."
+    },
+    {
+      "id": "deseo-uno",
+      "titulo": "Un deseo, uno",
+      "nivel": 2,
+      "tiempo": "10 min",
+      "etiquetas": ["peticion", "juego"],
+      "materiales": ["Papel y boli"],
+      "como": "Cada uno escribe un deseo (algo que le gustaría que la otra persona hiciera, dentro de lo acordado). Se leen en voz alta. El que escucha puede decir que no y se cambia por otro: el no siempre vale y no se discute."
+    },
+    {
+      "id": "termostato",
+      "titulo": "El termostato",
+      "nivel": 4,
+      "tiempo": "10 min",
+      "etiquetas": ["juego", "control", "temperatura"],
+      "materiales": ["Hielo, una cuchara y aceite de oliva"],
+      "como": "Uno dice una temperatura (\"frío\", \"templado\", \"caliente\") y el otro obedece: hielo, cuerpo o aceite tibio. Se va cambiando cada 30 segundos, sin avisar. Quien manda elige; quien obedece solo dice \"más\" o \"menos\"."
+    },
+    {
+      "id": "libreta-continuidad",
+      "titulo": "La libreta de continuidad",
+      "nivel": 2,
+      "tiempo": "5 min",
+      "etiquetas": ["rutina", "mejora"],
+      "materiales": ["Una libreta junto a la cama"],
+      "como": "Después de cada noche, escribid una línea: qué funcionó, qué no, qué probar la próxima vez. Es la forma más barata de que la segunda noche sea mejor que la primera, y la décima, infinitamente mejor."
+    }
+  ],
+  "planes": [
+    {
+      "id": "quince-minutos",
+      "titulo": "Quince minutos (para días sin energía)",
+      "nivel": 1,
+      "duracion": "15 min",
+      "etiquetas": ["rapido", "suave", "diario"],
+      "guion": [
+        { "min": 0, "texto": "Pon algo rico para beber (vino, chocolate caliente, limonada con menta). Sedados y sin ganas de hacer nada: esto es para vosotros." },
+        { "min": 3, "texto": "Sentados frente a frente: 60 segundos de mirada, sin tocar y sin hablar." },
+        { "min": 5, "texto": "Diez minutos de manos, con aceite, hablando del día que sea." },
+        { "min": 15, "texto": "Un beso largo y a dormir. Lo corto también vale." }
+      ]
+    },
+    {
+      "id": "primera-noche-guia",
+      "titulo": "Primera noche con guía (nivel 1, con hoja de ruta)",
+      "nivel": 1,
+      "duracion": "60 min",
+      "etiquetas": ["suave", "principiantes", "con-acuerdo"],
+      "guion": [
+        { "min": 0, "texto": "Antes de nada: elegid la palabra de seguridad y decidid el mapa de zonas de hoy (qué sí y qué no). Dejar eso claro hace que todo lo demás sea más fácil." },
+        { "min": 5, "texto": "Cocinad juntos algo sencillo (pasta con ajo, huevos con chile). Cocinar a dos ya es un plan." },
+        { "min": 30, "texto": "Comed del mismo plato, sin pantallas, contándoos algo que no os habéis contado nunca." },
+        { "min": 45, "texto": "Baile sin música: el que guía elige." },
+        { "min": 55, "texto": "Acostarse con calma y hablar de qué ha estado bien. El mejor momento es el de después." }
+      ]
+    },
+    {
+      "id": "noche-cocina-picante",
+      "titulo": "Noche de cocina picante (nivel 3)",
+      "nivel": 3,
+      "duracion": "90 min",
+      "etiquetas": ["picante", "juntos", "cena"],
+      "guion": [
+        { "min": 0, "texto": "Elegid la receta más picante que tengáis a mano y decidid quién corta, quién mezcla y quién prueba. Los papeles se cambian a mitad de cena." },
+        { "min": 15, "texto": "Cocinad juntos: picante de verdad, pero el que prueba primero se lleva la nota." },
+        { "min": 45, "texto": "Cena a oscuras, alimentándoos el uno al otro. Nadie dice \"me gusta el picante\": se nota en la cara." },
+        { "min": 60, "texto": "Ruleta de picante con cartas: beso, manos, frase al oído, probada de la cuchara del otro." },
+        { "min": 80, "texto": "Termina con agua, un dulce juntos y el balance de la noche: qué funcionó y qué no." }
+      ]
+    },
+    {
+      "id": "domingo-lento",
+      "titulo": "Domingo lento (nivel 2, tres horas)",
+      "nivel": 2,
+      "duracion": "3 h",
+      "etiquetas": ["domingo", "lento", "cocina"],
+      "guion": [
+        { "min": 0, "texto": "Hornead algo largo (arroz con azafrán, mole, pollo asado) y mientras se hace, el plan es no hacer nada importante: libro, siesta, ventana." },
+        { "min": 60, "texto": "Comida larga, con vino, sin pantallas. Los temas aburridos también valen." },
+        { "min": 90, "texto": "Siesta o café largo: el cuerpo de después de comer es otro y ahí es donde se habla de verdad." },
+        { "min": 120, "texto": "Baile sin música o masajitos de pies en el sofá." },
+        { "min": 160, "texto": "Notas de continuidad: escribid una línea de lo que ha funcionado. Mañana, más de lo mismo." }
+      ]
+    },
+    {
+      "id": "media-hora-rapida",
+      "titulo": "Media hora rápida (nivel 3)",
+      "nivel": 3,
+      "duracion": "30 min",
+      "etiquetas": ["rapido", "picante", "improvisado"],
+      "guion": [
+        { "min": 0, "texto": "Temperatura: decidid ahora si la noche es fría, templada o caliente. El que manda elige." },
+        { "min": 5, "texto": "Reto de 5 minutos: solo besos y manos, sin hablar." },
+        { "min": 12, "texto": "Cambio de ritmo: ducha o agua fría, según el termostato acordado." },
+        { "min": 20, "texto": "Un deseo cada uno, y el otro dice sí o no. Sin negociar." },
+        { "min": 30, "texto": "Agua, abrazo y una frase de cariño. Acaba la media hora, pero la noche puede seguir." }
+      ]
+    }
+  ]
+}
