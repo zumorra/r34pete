@@ -7,6 +7,11 @@
  * al siguiente. Asi el bot sigue respondiendo aunque un proveedor se caiga.
  *
  * - ollama      local, gratis e ilimitado, sin censura (el de la master).
+ * - opencode    el cliente oficial de OpenCode: da acceso a los modelos
+ *               ":free" de OpenCode (DeepSeek V4.1 Flash Free, MiniMax, Beam)
+ *               desde la nube. El tier gratis de OpenCode solo responde a
+ *               peticiones que salen de dentro del propio OpenCode, asi que
+ *               la via es llamar al CLI de verdad, no a la API a pelo.
  * - pollinations  online, gratis y SIN clave (1 respuesta cada 30 s por IP).
  * - gemini      online, gratis con clave (Google AI Studio).
  * - groq        online, gratis con clave (console.groq.com).
@@ -252,7 +257,60 @@ async function horde(cfg, mensajes) {
   throw new Error("horde: se agoto el tiempo de espera");
 }
 
-const BACKENDS = { ollama, pollinations, gemini, groq, openrouter, cerebras, nvidia, mistral, cloudflare, horde, xai };
+const cp = require("node:child_process");
+const os = require("node:os");
+
+/**
+ * Backend "opencode": llama al CLI oficial de OpenCode, que es la unica via
+ * para que el tier gratis de OpenCode (modelos ":free", como
+ * deepseek-v4.1-flash-free) conteste: su API por HTTP responde 403
+ * FreeTierError a todo lo que no venga de dentro del propio OpenCode.
+ *
+ * Sin clave, sin tarjeta y sin cuota propia: cada modelo ":free" tiene su
+ * propio cubo diario y se prueban en orden hasta que uno conteste.
+ */
+function promptDesde(mensajes) {
+  const partes = [];
+  for (const m of mensajes || []) {
+    if (!m || !m.content) continue;
+    if (m.role === "system") partes.push(m.content);
+    else if (m.role === "user") partes.push(`Usuario: ${m.content}`);
+    else partes.push(`Bot: ${m.content}`);
+  }
+  return partes.join("\n\n");
+}
+
+const opencode = async (cfg, mensajes) => {
+  const bin = cfg.opencode_binario || "opencode";
+  const lista = String(
+    cfg.opencode_modelo ||
+      "opencode/deepseek-v4.1-flash-free,opencode/minimax-m3.1-flash-free,opencode/beam-free,opencode/nemotron-3.5-lightning-free,opencode/nemotron-3-ultra-free"
+  )
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const prompt = promptDesde(mensajes);
+  const timeoutS = Number(cfg.opencode_timeout_s || 180);
+  let ultimo = "";
+  for (const modelo of lista) {
+    const r = cp.spawnSync(bin, ["run", "--model", modelo, prompt], {
+      cwd: os.tmpdir(),
+      encoding: "utf8",
+      timeout: timeoutS * 1000,
+      maxBuffer: 8 * 1024 * 1024,
+    });
+    if (r.error && r.error.code === "ENOENT") {
+      throw new Error("no esta instalado el cliente de opencode");
+    }
+    const salida = String(r.stdout || "").trim();
+    if (salida) return { texto: salida, modelo };
+    const err = String(r.stderr || "").trim().split("\n").filter(Boolean);
+    ultimo = err.length ? err[err.length - 1].slice(0, 120) : `codigo ${r.status}`;
+  }
+  throw new Error(`opencode no respondio (${ultimo})`);
+};
+
+const BACKENDS = { ollama, opencode, pollinations, gemini, groq, openrouter, cerebras, nvidia, mistral, cloudflare, horde, xai };
 
 /**
  * Responde con el primer backend que funcione.

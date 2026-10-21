@@ -58,6 +58,12 @@ const POR_DEFECTO = {
     orden: ["groq", "pollinations"],
     ollama_url: "http://127.0.0.1:11434",
     ollama_modelo: "superyuki-ia:latest",
+    // Cliente oficial de OpenCode: por el salen los modelos ":free" de
+    // OpenCode (DeepSeek V4.1 Flash Free, MiniMax, Beam...). Sin clave.
+    opencode_binario: "opencode",
+    opencode_modelo:
+      "opencode/deepseek-v4.1-flash-free,opencode/minimax-m3.1-flash-free,opencode/beam-free,opencode/nemotron-3.5-lightning-free,opencode/nemotron-3-ultra-free",
+    opencode_timeout_s: 180,
     pollinations_modelo: "openai-fast",
     gemini_modelo: "gemini-2.5-flash",
     groq_modelo: "qwen/qwen3.8-27b",

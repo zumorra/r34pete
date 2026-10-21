@@ -40,6 +40,15 @@ jobs:
       - name: Instalar dependencias
         run: npm ci --omit=dev
 
+      # El cliente oficial de OpenCode: por el salen los modelos ":free" de
+      # OpenCode (deepseek-v4.1-flash-free, minimax, beam...). Su API por HTTP
+      # responde 403 FreeTierError a todo lo que no venga de dentro de
+      # OpenCode, asi que la unica via en la nube es el CLI de verdad.
+      - name: Instalar el cliente de OpenCode
+        run: |
+          npm install -g opencode-ai@1 --no-fund --no-audit
+          opencode --version
+
       - name: Preparar configuracion
         env:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
@@ -100,6 +109,17 @@ jobs:
           echo "rule34: $([ -n "$RULE34_API_KEY" ] && echo con clave || echo sin clave)"
           echo "openrouter: $([ -n "$OPENROUTER_API_KEY" ] && echo con clave || echo SIN clave)"
           echo "modelo openrouter: $(node -e 'console.log(JSON.parse(require("fs").readFileSync(".r34pete/config.json","utf8")).ia.openrouter_modelo)')"
+
+      # Pruebas de unidad (sin internet ni Discord): si un cambio rompe el
+      # registro de publicados, el feed, el cuerpo de la IA o el backend de
+      # opencode, la run PARA AQUI en vez de arrancar el bot roto.
+      - name: Probar el codigo
+        run: |
+          node probar-openrouter.js
+          node probar-vistos.js
+          node probar-feed.js
+          node probar-opencode.js
+          echo "todas las pruebas de unidad pasan"
 
       # Comprobacion real del backend de IA: llama a OpenRouter con la clave de
       # la instancia y escribe en el log el modelo que sirvio de verdad.
