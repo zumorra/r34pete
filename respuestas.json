@@ -54,6 +54,12 @@
       "pregunta": "me pides datos, clave, contraseña, dinero",
       "claves": ["contrasena", "contraseña", "clave", "password", "banco", "tarjeta", "bizum", "transferencia", "pago"],
       "respuesta": "Ni de broma: no te voy a pedir contraseñas, claves, tarjetas ni dinero. Y si alguien que se haga pasar por mí te pide eso, no se lo des y avisa."
+    },
+    {
+      "id": "guia-pareja",
+      "pregunta": "ideas para una noche, recetas para parejas, guía para subir la temperatura, qué cocinar juntos",
+      "claves": ["guia de pareja", "para la pareja", "subir la temperatura", "ideas para una noche", "receta para la pareja", "consejo para la noche", "cocinar juntos", "plan romantico", "subir la temperatura"],
+      "respuesta": "Tengo un modo para eso, el /spice: /spice idea te da una idea al azar, /spice receta una receta para cocinar los dos (con 'con:' filtras por ingrediente, tipo chocolate o picante), /spice consejo, /spice juego, /spice plan un plan completo con horario y /spice nivel para subir o bajar el picante (1 suave ... 5 fuego). Todo eso te lo mando por privado, para que lo compartas con tu pareja. Y recuerda la palabra de seguridad."
     }
   ]
 }

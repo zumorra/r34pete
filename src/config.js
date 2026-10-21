@@ -86,6 +86,14 @@ const POR_DEFECTO = {
   pendientesFile: "/var/lib/r34pete/pendientes.json",
   // Base de conocimiento: "si te preguntan X, responde Y".
   conocimientoFile: "/var/lib/r34pete/respuestas.json",
+  // Guia para parejas (recetas, consejos, juegos y planes).
+  parejaFile: "/var/lib/r34pete/pareja.json",
+  // Nivel por ambito y registro de lo ya sugerido.
+  parejaEstadoFile: "/var/lib/r34pete/pareja-estado.json",
+  pareja: {
+    // Nivel de picante por defecto (1 suave ... 5 fuego).
+    nivel: 3,
+  },
   // Estado de los feeds: pagina por la que va cada uno y tamanos ya sabidos.
   feedEstadoFile: "/var/lib/r34pete/feed-estado.json",
   // Social SDK de Discord: lee la bandeja de privados de Yuki y deja las

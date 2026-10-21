@@ -77,6 +77,8 @@ jobs:
             cfg.pendientesFile = ".r34pete/pendientes.json";
             cfg.chat.instrucciones = ".r34pete/instrucciones.md";
             cfg.conocimientoFile = ".r34pete/respuestas.json";
+            cfg.parejaFile = ".r34pete/pareja.json";
+            cfg.parejaEstadoFile = ".r34pete/pareja-estado.json";
             cfg.feedEstadoFile = ".r34pete/feed-estado.json";
             cfg.social = cfg.social || {};
             cfg.social.archivo = ".r34pete/borradores.json";
@@ -101,6 +103,8 @@ jobs:
           chmod 600 .r34pete/config.json
           cp instrucciones.md .r34pete/instrucciones.md
           cp respuestas.json .r34pete/respuestas.json
+          # La guia para parejas (recetas, consejos, juegos y planes).
+          cp pareja.json .r34pete/pareja.json
           # El registro de "ya publicado" viene del propio repo
           # (.r34pete/vistos.json, lo commitea el bot). NO se pisa con una
           # copia vieja: eso hacia que el bot olvidase lo ya publicado y
@@ -119,6 +123,7 @@ jobs:
           node probar-vistos.js
           node probar-feed.js
           node probar-opencode.js
+          node probar-pareja.js
           echo "todas las pruebas de unidad pasan"
 
       # Comprobacion real del backend de IA: llama a OpenRouter con la clave de

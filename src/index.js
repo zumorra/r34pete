@@ -29,6 +29,7 @@ const { COMANDOS } = require("./comandos");
 const { Vistos } = require("./seen");
 const { Instrucciones } = require("./instrucciones");
 const { Conocimiento } = require("./conocimiento");
+const { Guia } = require("./pareja");
 const { Social } = require("../social/social");
 const { Borradores } = require("../social/borradores");
 const { Telegram } = require("../telegram/telegram");
@@ -66,6 +67,12 @@ cliente.vistos = new Vistos(cfg.vistosFile);
 // conversacion y configuracion de IA.
 cliente.instrucciones = new Instrucciones(cfg.chat.instrucciones);
 cliente.conocimiento = new Conocimiento(cfg.conocimientoFile);
+// Guia para parejas: recetas, consejos, juegos y planes (todo local, sin IA).
+cliente.pareja = new Guia({
+  ruta: cfg.parejaFile,
+  estadoFile: cfg.parejaEstadoFile,
+  nivel: (cfg.pareja || {}).nivel,
+});
 // Social SDK: lee la bandeja de privados de Yuki y prepara respuestas.
 cliente.social = new Social(cfg.social || {});
 cliente.borradores = new Borradores((cfg.social || {}).archivo || "/var/lib/r34pete/borradores.json");
@@ -234,6 +241,15 @@ async function manejarChat(mensaje) {
   // Anota el privado por si hay que retomarlo al reiniciar la sesion.
   if (esDM || esGrupo) {
     cliente.pendientes.anotar(mensaje.channel.id, mensaje.id);
+  }
+
+  // La guia de pareja se resuelve aqui (contenido local, sin IA ni cuota).
+  const ambito = esDM ? "dm" : (mensaje.guildId ? String(mensaje.guildId) : "dm");
+  const guiado = cliente.pareja.responder(texto, ambito);
+  if (guiado) {
+    console.log(`[spice] guia de pareja para ${mensaje.author.tag}`);
+    await enviarPartido(mensaje, guiado);
+    return guiado;
   }
 
   try {
@@ -448,6 +464,7 @@ cliente.on("interactionCreate", async (interaccion) => {
     if (interaccion.commandName === "feed") return await cmdFeed(interaccion);
     if (interaccion.commandName === "instrucciones") return await cmdInstrucciones(interaccion);
     if (interaccion.commandName === "saber") return await cmdSaber(interaccion);
+    if (interaccion.commandName === "spice") return await cmdSpice(interaccion);
     if (interaccion.commandName === "enviar") return await cmdEnviar(interaccion);
     if (interaccion.commandName === "borradores") return await cmdBorradores(interaccion);
     if (interaccion.commandName === "ia") return await cmdIa(interaccion);
@@ -673,8 +690,7 @@ async function cmdChat(interaccion) {
 }
 
 /** Muestra lo que el bot sabe responder (las reglas cargadas). */
-async function cmdSaber(interaccion) {
-  const reglas = cliente.conocimiento.cargar();
+async function cmdSaber(interaccion) {  const reglas = cliente.conocimiento.cargar();
   if (!reglas.length) {
     return await respuestaEphemeral(interaccion, {
       content: `Todavia no hay reglas cargadas (\`${cfg.conocimientoFile}\`).`,
@@ -686,6 +702,87 @@ async function cmdSaber(interaccion) {
   await respuestaEphemeral(interaccion, {
     content: `**Lo que se de saber** (de \`${cfg.conocimientoFile}\`):\n\n${texto}`,
   });
+}
+
+/**
+ * /spice: la guia para parejas (recetas, consejos, juegos y planes).
+ *
+ * Todo el contenido sale del fichero de la guia (pareja.json), asi que no
+ * gasta IA ni cuota y siempre devuelve lo mismo. Las respuestas son
+ * efimeras: la vida intima de una pareja no se pone en un canal compartido.
+ */
+async function cmdSpice(interaccion) {
+  const sub = interaccion.options.getSubcommand() || "idea";
+  const ambito = interaccion.guildId ? String(interaccion.guildId) : "dm";
+  const guia = cliente.pareja;
+  const nivel = guia.nivel(ambito);
+
+  if (sub === "nivel") {
+    const pedido = interaccion.options.getInteger("nivel");
+    if (pedido) {
+      const nuevo = guia.setNivel(ambito, pedido);
+      const textos = guia.textoNiveles();
+      return respuestaEphemeral(interaccion, {
+        content:
+          `🔥 Nivel de la guia: **${nuevo}/5**\n` +
+          (nuevo === 1 ? "Todo suave: ternura, comida y contacto.\n" : "") +
+          (textos ? `\n${textos}` : ""),
+      });
+    }
+    return respuestaEphemeral(interaccion, {
+      content:
+        `🔥 Nivel actual de la guia: **${nivel}/5**\n` +
+        "Cambialo con `/spice nivel nivel:N` (1 suave ... 5 fuego).\n\n" +
+        (guia.textoNiveles() || ""),
+    });
+  }
+
+  if (sub === "lista") {
+    const c = guia.contar();
+    return respuestaEphemeral(interaccion, {
+      content:
+        `**La guia** (nivel ${nivel}/5):\n` +
+        `🍳 Recetas: ${c.receta}\n💬 Consejos: ${c.consejo}\n🎲 Juegos: ${c.juego}\n🕯 Planes: ${c.plan}\n\n` +
+        "Cocinad juntos, hablaos y no se olvide la palabra de seguridad.",
+    });
+  }
+
+  if (sub === "receta") {
+    const con = interaccion.options.getString("con") || "";
+    const receta = guia.elegir("receta", nivel, con);
+    if (!receta) {
+      const otras = guia.candidatos("receta", nivel).slice(0, 8).map((r) => r.titulo).join(", ");
+      return respuestaEphemeral(interaccion, {
+        content: `No hay ninguna receta con "${con}" para el nivel ${nivel}. Hay estas: ${otras}`,
+      });
+    }
+    return respuestaEphemeral(interaccion, { content: guia.formatoReceta(receta) });
+  }
+
+  if (sub === "consejo") {
+    const consejo = guia.elegir("consejo", nivel);
+    return respuestaEphemeral(interaccion, { content: guia.formatoConsejo(consejo) });
+  }
+
+  if (sub === "juego") {
+    const juego = guia.elegir("juego", nivel);
+    return respuestaEphemeral(interaccion, { content: guia.formatoJuego(juego) });
+  }
+
+  if (sub === "plan") {
+    const minutos = interaccion.options.getInteger("minutos") || 0;
+    const plan = guia.elegirPlan(nivel, minutos, true);
+    if (plan) {
+      return respuestaEphemeral(interaccion, { content: guia.formatoPlan(plan) });
+    }
+    return respuestaEphemeral(interaccion, { content: guia.planHecho(nivel, minutos || 60) });
+  }
+
+  // "idea": una receta, un consejo o un juego, al azar.
+  const tipos = ["receta", "consejo", "juego"];
+  const tipo = tipos[Math.floor(Math.random() * tipos.length)];
+  const item = guia.elegir(tipo, nivel);
+  return respuestaEphemeral(interaccion, { content: guia.formatear(tipo, item) });
 }
 
 async function cmdInstrucciones(interaccion) {
@@ -715,6 +812,8 @@ async function cmdOlvidar(interaccion) {
 }
 
 async function cmdEstado(interaccion) {
+  const c = cliente.pareja.contar();
+  const ambito = interaccion.guildId ? String(interaccion.guildId) : "dm";
   const embed = new EmbedBuilder()
     .setColor(0x9b30ff)
     .setTitle("R34pete")
@@ -723,6 +822,11 @@ async function cmdEstado(interaccion) {
       { name: "Feeds", value: String(cliente.feeds.feeds.size) },
       { name: "Canal NSFW exigido", value: cfg.guards.requireNsfwChannel ? "si" : "no" },
       { name: "Rol de edad", value: cfg.guards.ageRole || "no" },
+      {
+        name: "Guia de pareja",
+        value: `${c.receta} recetas · ${c.consejo} consejos · ${c.juego} juegos · ${c.plan} planes`,
+      },
+      { name: "Nivel de la guia", value: `${cliente.pareja.nivel(ambito)}/5` },
       { name: "Servidor", value: interaccion.guild?.name || "DM" }
     );
   return respuestaEphemeral(interaccion, { embeds: [embed] });
@@ -750,6 +854,13 @@ async function cmdAyuda(interaccion) {
       },
       { name: "/feed listar", value: "Muestra los feeds." },
       { name: "/feed borrar", value: "Borra un feed por id." },
+      {
+        name: "/spice",
+        value:
+          "Guia para parejas: `idea` (al azar), `receta` (con `con:` filtras por ingrediente), " +
+          "`consejo`, `juego`, `plan` (con `minutos:`) y `nivel` (1 suave ... 5 fuego). " +
+          "Las respuestas son privadas, para compartirlas con tu pareja.",
+      },
       { name: "/estado", value: "Resumen." }
     );
   return respuestaEphemeral(interaccion, { embeds: [embed] });

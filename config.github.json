@@ -102,6 +102,11 @@
   ],
   "pendientesFile": ".r34pete/pendientes.json",
   "conocimientoFile": ".r34pete/respuestas.json",
+  "parejaFile": ".r34pete/pareja.json",
+  "parejaEstadoFile": ".r34pete/pareja-estado.json",
+  "pareja": {
+    "nivel": 3
+  },
   "social": {
     "habilitado": true,
     "appId": "",

@@ -103,6 +103,33 @@ cae al siguiente modelo y que el prompt se arma con el `system` y la pregunta.
 En memoria recuerda los últimos 12 mensajes por usuario (`chat.maximo_historial`),
 así que el chat mantiene el contexto.
 
+### Guía para parejas (`/spice`)
+
+Además del contenido de adultos, el bot es una **guía para parejas** que
+quieren subir la temperatura: recetas para cocinar los dos, consejos, juegos y
+planes con horario.
+
+| Comando | Qué hace |
+|---|---|
+| `/spice idea` | Una idea al azar: receta, consejo o juego. |
+| `/spice receta con:chocolate` | Una receta (el `con:` filtra por ingrediente). |
+| `/spice consejo` | Un consejo para la noche. |
+| `/spice juego` | Un juego para dos. |
+| `/spice plan minutos:90` | Un plan completo con horario (si no encaja, lo monta a medida). |
+| `/spice nivel` | Muestra el nivel de picante (1 suave … 5 fuego). |
+| `/spice nivel nivel:4` | Cambia el nivel para ese servidor. |
+| `/spice lista` | Qué hay en la guía. |
+
+- Todo el contenido está en **`pareja.json`** (en la nube se copia a
+  `.r34pete/pareja.json`): se edita sin tocar código y el bot lo relee solo.
+- **No gasta IA ni cuota**: es contenido local, así que siempre funciona.
+- Las respuestas son **privadas (efímeras)**: la vida íntima de una pareja no
+  se pone en un canal compartido.
+- El nivel es por servidor (`pareja.nivel` en la config pone el de por
+  defecto) y se guarda en `parejaEstadoFile`.
+- Por privado, si escribes algo de la guía ("dame una receta picante",
+  "spice", "plan para mi pareja"), el bot contesta con la guía sin gastar IA.
+
 ### IAs con acceso gratuito (todas sin tarjeta)
 
 | Proveedor | Clave | Modelo por defecto | Para qué |
