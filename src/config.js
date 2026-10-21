@@ -55,12 +55,12 @@ const POR_DEFECTO = {
   },
   // IA: se prueban los backends en orden hasta que uno responda.
   ia: {
-    orden: ["ollama", "pollinations"],
+    orden: ["groq", "pollinations"],
     ollama_url: "http://127.0.0.1:11434",
     ollama_modelo: "superyuki-ia:latest",
     pollinations_modelo: "openai-fast",
     gemini_modelo: "gemini-2.5-flash",
-    groq_modelo: "llama-3.3-70b-versatile",
+    groq_modelo: "qwen/qwen3.8-27b",
     openrouter_modelo: "openrouter/free",
     cerebras_modelo: "llama-3.3-70b",
     nvidia_modelo: "nvidia/llama-3.1-nemotron-70b-instruct",

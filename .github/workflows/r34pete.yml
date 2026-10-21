@@ -96,6 +96,12 @@ jobs:
         run: |
           node probar-ia-openrouter.js || echo "aviso: el backend openrouter no respondio (el bot seguira con el siguiente)"
 
+      - name: Probar los backends de IA
+        env:
+          R34PETE_CONFIG: .r34pete/config.json
+        run: |
+          node probar-ia.js || echo "aviso: ningun backend respondio (el bot seguira con el siguiente)"
+
       - name: Hablar con Discord
         env:
           R34PETE_CONFIG: .r34pete/config.json

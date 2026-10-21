@@ -39,16 +39,22 @@
   },
   "ia": {
     "orden": [
-      "openrouter",
+      "groq",
       "pollinations",
       "gemini",
-      "groq"
+      "cerebras",
+      "nvidia",
+      "openrouter",
+      "mistral",
+      "cloudflare",
+      "horde",
+      "xai"
     ],
     "ollama_url": "http://127.0.0.1:11434",
     "ollama_modelo": "superyuki-ia:latest",
     "pollinations_modelo": "openai-fast",
     "gemini_modelo": "gemini-2.5-flash",
-    "groq_modelo": "llama-3.3-70b-versatile",
+    "groq_modelo": "qwen/qwen3.8-27b",
     "openrouter_modelo": "openrouter/free",
     "cerebras_modelo": "llama-3.3-70b",
     "nvidia_modelo": "nvidia/llama-3.1-nemotron-70b-instruct",
