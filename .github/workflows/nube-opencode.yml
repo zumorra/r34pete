@@ -64,6 +64,11 @@ jobs:
           done
           if [ -z "$URL" ]; then cat salida/cloudflared.log; exit 1; fi
           printf '%s' "$URL" > salida/nube-url.txt
+          # El nombre recien creado tarda unos segundos en resolver: se espera.
+          for i in $(seq 1 45); do
+            getent hosts "$(echo "$URL" | sed 's#https://##')" >/dev/null 2>&1 && break
+            sleep 2
+          done
           echo "URL publica del cubo: $URL"
           echo "### Cubo de nube" >> "$GITHUB_STEP_SUMMARY"
           echo "URL: $URL" >> "$GITHUB_STEP_SUMMARY"
@@ -76,19 +81,28 @@ jobs:
           retention-days: 1
 
       - name: Probar el cubo (DeepSeek desde la nube)
+        continue-on-error: true
         env:
           CUBO_TOKEN: ${{ secrets.CUBO_TOKEN }}
         run: |
           set -uo pipefail
           URL=$(cat salida/nube-url.txt)
           echo "probando deepseek-v4.1-flash-free desde la nube..."
-          curl -s -m 300 -H "Authorization: Bearer $CUBO_TOKEN" -H "Content-Type: application/json" \
-            "$URL/v1/chat/completions" \
-            -d '{"model":"deepseek-v4.1-flash-free","messages":[{"role":"user","content":"di OK"}]}' \
-            | tee salida/prueba.json | head -c 600
-          echo
+          for intento in 1 2 3; do
+            SALIDA=$(curl -s -m 300 -H "Authorization: Bearer $CUBO_TOKEN" -H "Content-Type: application/json" \
+              "$URL/v1/chat/completions" \
+              -d '{"model":"deepseek-v4.1-flash-free","messages":[{"role":"user","content":"di OK"}]}' || true)
+            if [ -n "$SALIDA" ]; then
+              echo "$SALIDA" | tee salida/prueba.json | head -c 600
+              echo
+              break
+            fi
+            echo "intento $intento sin respuesta, reintentando..."
+            sleep 15
+          done
 
       - name: Mantener vivo el cubo
+        if: always()
         run: |
           set -uo pipefail
           HORAS="${{ inputs.horas }}"
