@@ -59,6 +59,10 @@ cd "$DESTINO"
 npm ci --omit=dev || npm install --omit=dev
 chown -R "$USUARIO:$USUARIO" "$DESTINO"
 chown root:"$USUARIO" "$CONF"
+# Base de conocimiento: solo se copia si no existe (no pisar lo editado).
+if [ ! -f /var/lib/r34pete/respuestas.json ]; then
+  install -m 644 -o "$USUARIO" -g "$USUARIO" "$ORIGEN/respuestas.json" /var/lib/r34pete/respuestas.json
+fi
 chmod 640 "$CONF"
 
 echo "==> Servicio"

@@ -28,6 +28,7 @@ const presets = require("./presets");
 const { COMANDOS } = require("./comandos");
 const { Vistos } = require("./seen");
 const { Instrucciones } = require("./instrucciones");
+const { Conocimiento } = require("./conocimiento");
 const { Pendientes } = require("./pendientes");
 const { Historial } = require("./historial");
 const ia = require("./ia");
@@ -58,6 +59,7 @@ cliente.vistos = new Vistos(cfg.vistosFile);
 // Chat automatico: instrucciones (fichero, recarga en caliente), memoria de
 // conversacion y configuracion de IA.
 cliente.instrucciones = new Instrucciones(cfg.chat.instrucciones);
+cliente.conocimiento = new Conocimiento(cfg.conocimientoFile);
 cliente.pendientes = new Pendientes(cfg.pendientesFile);
 cliente.historial = new Historial(cfg.chat.maximo_historial);
 cliente.iaCfg = cfg.ia;
@@ -291,11 +293,23 @@ async function revisarPendientes() {
  */
 async function responderConIA(usuarioId, texto) {
   const historial = cliente.historial.ultimos(usuarioId);
+  // Lo que sabe el bot (reglas de "si te preguntan X, responde Y") va al prompt.
+  const kb = cliente.conocimiento.prompt();
   const mensajes = [
-    { role: "system", content: cliente.instrucciones.actual() },
+    {
+      role: "system",
+      content: cliente.instrucciones.actual() + (kb ? "\n\n" + kb : ""),
+    },
     ...historial,
     { role: "user", content: texto },
   ];
+  // Regla marcada como "exacta": se contesta tal cual, sin gastar IA.
+  const regla = cliente.conocimiento.buscar(texto);
+  if (regla && regla.exacto) {
+    cliente.historial.anadir(usuarioId, "user", texto);
+    cliente.historial.anadir(usuarioId, "assistant", regla.respuesta);
+    return { texto: regla.respuesta, backend: "reglas", modelo: "respuestas.json", avisos: [] };
+  }
   const r = await ia.responder(cliente.iaCfg, mensajes);
   cliente.historial.anadir(usuarioId, "user", texto);
   cliente.historial.anadir(usuarioId, "assistant", r.texto);
@@ -326,6 +340,7 @@ cliente.on("interactionCreate", async (interaccion) => {
     if (interaccion.commandName === "buscar") return await cmdBuscar(interaccion);
     if (interaccion.commandName === "feed") return await cmdFeed(interaccion);
     if (interaccion.commandName === "instrucciones") return await cmdInstrucciones(interaccion);
+    if (interaccion.commandName === "saber") return await cmdSaber(interaccion);
     if (interaccion.commandName === "ia") return await cmdIa(interaccion);
     if (interaccion.commandName === "olvidar") return await cmdOlvidar(interaccion);
     if (interaccion.commandName === "chat") return await cmdChat(interaccion);
@@ -541,6 +556,22 @@ async function cmdChat(interaccion) {
       "Ahora mismo no puedo responder (se acabo la cuota o la IA no responde). Intentalo en un momento."
     );
   }
+}
+
+/** Muestra lo que el bot sabe responder (las reglas cargadas). */
+async function cmdSaber(interaccion) {
+  const reglas = cliente.conocimiento.cargar();
+  if (!reglas.length) {
+    return await respuestaEphemeral(interaccion, {
+      content: `Todavia no hay reglas cargadas (\`${cfg.conocimientoFile}\`).`,
+    });
+  }
+  const texto = reglas
+    .map((r) => `**${r.id || r.pregunta || "regla"}**${r.exacto ? " _(exacta)_" : ""}: ${r.respuesta}`)
+    .join("\n\n");
+  await respuestaEphemeral(interaccion, {
+    content: `**Lo que se de saber** (de \`${cfg.conocimientoFile}\`):\n\n${texto}`,
+  });
 }
 
 async function cmdInstrucciones(interaccion) {

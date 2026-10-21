@@ -22,6 +22,10 @@ const MEDIOS = [
 
 const COMANDOS = [
   new SlashCommandBuilder()
+    .setName("saber")
+    .setDescription("Muestra lo que el bot sabe responder (reglas cargadas)."),
+
+  new SlashCommandBuilder()
     .setName("buscar")
     .setDescription("Busca por etiquetas y postea un resultado al azar.")
     .addStringOption((o) =>

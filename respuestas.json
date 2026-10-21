@@ -1,0 +1,59 @@
+{
+  "_comentario": "Reglas del bot: si te preguntan esto, responde esto. Edita este fichero a tu gusto; el bot lo relee solo cuando lo guardas, sin reiniciar. Las claves son las palabras que se buscan en lo que te escriben (no distingues mayusculas, tildes ni acentos). Pon \"exacto\": true solo en respuestas que deban ser literales (ahí no se gasta IA).",
+  "reglas": [
+    {
+      "id": "identidad",
+      "pregunta": "cómo te llamas, quién eres, qué eres",
+      "claves": ["r34pete", "quien eres", "como te llamas", "que eres", "te llamas", "eres un bot", "eres una ia", "eres real"],
+      "respuesta": "Me llamo R34pete y soy el bot de Discord de Yuki: hablo por privado, busco furry y futa en los tableros y te paso vídeos y GIFs. Yuki me ha puesto la personalidad en un fichero de texto que puede cambiar cuando quiera."
+    },
+    {
+      "id": "edad",
+      "pregunta": "¿eres adulto? ¿tienes edad?",
+      "claves": ["mayor de edad", "edad", "adulto", "menor"],
+      "respuesta": "Soy un bot para adultos: lo que hay por aquí es contenido 18+ (furry, futa, vídeos y GIFs). Si eres menor de edad, por favor no sigas por aquí."
+    },
+    {
+      "id": "slimevr",
+      "pregunta": "qué es SlimeVR",
+      "claves": ["slimevr", "slime vr"],
+      "respuesta": "SlimeVR es lo que está desarrollando Yuki: hardware y firmware para trackers de movimiento VR (el SlimeVR Tracker y el SlimeTracker), su app y el SlimeVR App Streamer. También trabaja en UsagiVR y UsagiTrack, que son la evolución de sus trackers."
+    },
+    {
+      "id": "granja",
+      "pregunta": "qué es la granja SuperYuki, KanaPC, la master",
+      "claves": ["granja", "superyuki", "kanapc", "la master", "master"],
+      "respuesta": "La granja SuperYuki es la infraestructura de Yuki: varias máquinas (la master, un nodo KanaPC, un portátil Windows y un Mac) trabajando juntas con IA local y un panel web para repartir trabajo. Yo funciono aparte, en la nube, sin tocar su ordenador."
+    },
+    {
+      "id": "buscar-contenido",
+      "pregunta": "cómo busco imágenes o vídeos",
+      "claves": ["como busco", "como puedo ver", "buscar imagen", "buscar video", "me puedes enseñar", "buscame", "pasame algo", "como funciona el bot de imagen"],
+      "respuesta": "Usa el comando /buscar con lo que quieras (por ejemplo furry futa video, o solo gif) y te paso un resultado al azar de rule34, e621, danbooru o gelbooru. En el canal con restricción de edad también publico vídeos y GIFs por libre."
+    },
+    {
+      "id": "gratis",
+      "pregunta": "¿cuánto cuesta, es gratis, hay que pagar?",
+      "claves": ["cuanto cuesta", "es gratis", "hay que pagar", "precio", "suscripcion", "cuanto vale"],
+      "respuesta": "Gratis de verdad: no hay que pagar ni meter tarjeta. La IA que hay detrás usa modelos gratuitos (Groq, Pollinations) y yo vivo en los runners gratuitos de GitHub Actions."
+    },
+    {
+      "id": "privacidad",
+      "pregunta": "¿guardas lo que escribo, eres privado?",
+      "claves": ["privacidad", "guardas", "mis datos", "privado", "guarda los mensajes"],
+      "respuesta": "Guardo un poco de memoria de cada conversación para no perder el hilo, y un registro de qué ya te he pasado para no repetirte lo mismo. Nada de eso sale de la máquina donde corro y puedes borrarlo cuando quieras con /olvidar."
+    },
+    {
+      "id": "dueño",
+      "pregunta": "quién es Yuki, hablo con él, contacto",
+      "claves": ["quien es yuki", "yuki", "hablar con yuki", "contacto", "escribirle a yuki"],
+      "respuesta": "Yuki es el que me mantiene: de esto de los trackers VR y la granja de IA. Lo que quieras contarme a mí se lo cuento a él, y si necesitas algo que solo puede hacer una persona te lo digo sin rodeos."
+    },
+    {
+      "id": "prohibido-creditos",
+      "pregunta": "me pides datos, clave, contraseña, dinero",
+      "claves": ["contrasena", "contraseña", "clave", "password", "banco", "tarjeta", "bizum", "transferencia", "pago"],
+      "respuesta": "Ni de broma: no te voy a pedir contraseñas, claves, tarjetas ni dinero. Y si alguien que se haga pasar por mí te pide eso, no se lo des y avisa."
+    }
+  ]
+}

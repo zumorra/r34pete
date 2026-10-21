@@ -86,5 +86,6 @@
       "activado": true
     }
   ],
-  "pendientesFile": ".r34pete/pendientes.json"
+  "pendientesFile": ".r34pete/pendientes.json",
+  "conocimientoFile": ".r34pete/respuestas.json"
 }

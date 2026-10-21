@@ -78,6 +78,8 @@ const POR_DEFECTO = {
   feedsFile: "/var/lib/r34pete/feeds.json",
   // Privados conocidos, para retomar lo que se quedo sin contestar.
   pendientesFile: "/var/lib/r34pete/pendientes.json",
+  // Base de conocimiento: "si te preguntan X, responde Y".
+  conocimientoFile: "/var/lib/r34pete/respuestas.json",
   // Registro de lo ya publicado, para no repetir.
   vistosFile: "/var/lib/r34pete/vistos.json",
   logLevel: "info",
@@ -117,6 +119,7 @@ function cargar(ruta = RUTA_POR_DEFECTO) {
   if (process.env.R34PETE_FEEDS_FILE) cfg.feedsFile = process.env.R34PETE_FEEDS_FILE;
   if (process.env.R34PETE_VISTOS_FILE) cfg.vistosFile = process.env.R34PETE_VISTOS_FILE;
   if (process.env.R34PETE_INSTRUCCIONES) cfg.chat.instrucciones = process.env.R34PETE_INSTRUCCIONES;
+  if (process.env.R34PETE_CONOCIMIENTO) cfg.conocimientoFile = process.env.R34PETE_CONOCIMIENTO;
 
   if (!cfg.token) {
     throw new Error(

@@ -63,6 +63,7 @@ jobs:
             cfg.vistosFile = ".r34pete/vistos.json";
             cfg.pendientesFile = ".r34pete/pendientes.json";
             cfg.chat.instrucciones = ".r34pete/instrucciones.md";
+            cfg.conocimientoFile = ".r34pete/respuestas.json";
             cfg.providers.rule34.userId = process.env.RULE34_USER_ID || cfg.providers.rule34.userId;
             cfg.providers.rule34.apiKey = process.env.RULE34_API_KEY || "";
             cfg.providers.rule34.enabled = Boolean(cfg.providers.rule34.apiKey);
