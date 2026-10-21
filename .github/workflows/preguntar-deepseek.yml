@@ -1,0 +1,65 @@
+name: Preguntar a DeepSeek (cubo nube)
+
+# El tier gratis de OpenCode (modelos ":free" como deepseek-v4.1-flash-free)
+# tiene el tope POR IP: la master se queda sin cuota y deja de contestar.
+# El runner de GitHub Actions sale por OTRA IP, asi que su cubo sigue vivo.
+# Este workflow es el "quinto cubo": pregunta desde la nube y devuelve el
+# texto como artefacto.
+#
+#   gh workflow run preguntar-deepseek.yml -f pregunta="..." -f modelo=...
+#   gh run watch <id> && gh run download <id>
+
+on:
+  workflow_dispatch:
+    inputs:
+      pregunta:
+        description: "Pregunta para el modelo"
+        required: true
+      modelo:
+        description: "Modelo :free de OpenCode"
+        required: false
+        default: "opencode/deepseek-v4.1-flash-free"
+      salida:
+        description: "Nombre del archivo de salida"
+        required: false
+        default: "respuesta.txt"
+
+permissions:
+  contents: read
+
+jobs:
+  preguntar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar el cliente de OpenCode
+        run: |
+          npm install -g opencode-ai@1 --no-fund --no-audit
+          opencode --version
+
+      - name: Preguntar
+        env:
+          PREGUNTA: ${{ inputs.pregunta }}
+          MODELO: ${{ inputs.modelo }}
+          SALIDA: ${{ inputs.salida }}
+        run: |
+          set -uo pipefail
+          mkdir -p salida
+          # La pregunta va por stdin (no por argumentos) para que no choque
+          # con el limite de longitud de la linea de comandos.
+          printf '%s' "$PREGUNTA" | timeout 420 opencode run --model "$MODELO" \
+            > "salida/$SALIDA" 2> "salida/$SALIDA.err" || true
+          echo "--- stdout ---"
+          cat "salida/$SALIDA"
+          echo ""
+          echo "--- stderr ---"
+          tail -20 "salida/$SALIDA.err"
+
+      - name: Subir la respuesta
+        uses: actions/upload-artifact@v4
+        with:
+          name: respuesta
+          path: salida/
+          retention-days: 1
