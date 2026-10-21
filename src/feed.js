@@ -12,6 +12,28 @@ const { EmbedBuilder } = require("discord.js");
 const proveedores = require("./providers");
 const { canalEsNsfw, revisarTags } = require("./guard");
 
+/**
+ * Un solo feed por proveedor a la vez. Sin esto, los dos feeds (video y gif)
+ * pueden mirar la lista en el mismo instante y elegir el MISMO post, que
+ * acabaria publicado dos veces.
+ */
+const bloqueos = new Map();
+
+async function conBloqueo(proveedor, fn) {
+  const anterior = bloqueos.get(proveedor) || Promise.resolve();
+  let liberar;
+  const mio = new Promise((r) => {
+    liberar = r;
+  });
+  bloqueos.set(proveedor, anterior.then(() => mio));
+  await anterior;
+  try {
+    return await fn();
+  } finally {
+    liberar();
+  }
+}
+
 class Feed {
   constructor(id, datos, cliente) {
     this.id = id;
@@ -64,7 +86,7 @@ class Feed {
     if (this.publicando) return;
     this.publicando = true;
     try {
-      await this.publicarAhora();
+      await conBloqueo(this.proveedor, () => this.publicarAhora());
     } finally {
       this.publicando = false;
     }

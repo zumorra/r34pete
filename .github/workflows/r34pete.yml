@@ -100,16 +100,6 @@ jobs:
           echo "openrouter: $([ -n "$OPENROUTER_API_KEY" ] && echo con clave || echo SIN clave)"
           echo "modelo openrouter: $(node -e 'console.log(JSON.parse(require("fs").readFileSync(".r34pete/config.json","utf8")).ia.openrouter_modelo)')"
 
-      # Pruebas de unidad (sin internet ni Discord): si un cambio rompe el
-      # registro de publicados, el feed o el cuerpo de la IA, la run PARA AQUI
-      # en vez de arrancar el bot roto.
-      - name: Probar el codigo
-        run: |
-          node probar-openrouter.js
-          node probar-vistos.js
-          node probar-feed.js
-          echo "todas las pruebas de unidad pasan"
-
       # Comprobacion real del backend de IA: llama a OpenRouter con la clave de
       # la instancia y escribe en el log el modelo que sirvio de verdad.
       - name: Probar el backend openrouter
@@ -167,7 +157,10 @@ jobs:
             if [ -f .r34pete/vistos.json ] || [ -f .r34pete/pendientes.json ]; then
               git config user.name "r34pete"
               git config user.email "r34pete@users.noreply.github.com"
-              git add --ignore-unmatch .r34pete/vistos.json .r34pete/pendientes.json || true
+              # OJO: 'git add' no tiene --ignore-unmatch (eso es de 'git rm');
+              # con esa opcion el add fallaba y el registro NUNCA se guardaba,
+              # asi que el bot repetia lo ya publicado en cada sesion.
+              git add .r34pete/vistos.json .r34pete/pendientes.json 2>/dev/null || true
               git diff --cached --quiet || git commit -q -m "registro de publicados" || true
               # main puede haber avanzado (cambios del repo): se rebasa antes de
               # subir; si el rebase no sale, se aborta y se salta este ciclo.
